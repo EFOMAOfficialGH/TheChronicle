@@ -1,0 +1,1439 @@
+<title>The Chronicle</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=EB+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: one column app shell, styled as a gothic tome in the dark. One committed look: near-black, bone white, aged gold, blood red.
+   Role colour: blood red = DM, gold = player. */
+:root{
+  --bg:#0A0808; --surface:#141010; --surface2:#1F1917; --line:#3A2B22; --line-soft:rgba(201,162,74,.22); --fg:#E9E1D1; --muted:#9A8F80;
+  --foil:#C9A24A; --sheen:rgba(255,230,170,.045); --vig:rgba(0,0,0,.78);
+  --accent:#C9A24A; --accent-fg:#16100A; --accent-soft:#2B2312;
+  --ember:#E4584B; --ember-bg:#8F1F22; --ember-fg:#F6E9D8; --ember-soft:#2E1210;
+  --gold:#E3BC5A; --good:#6FA860; --warn:#D9A03A; --bad:#E5584E; --bad-fg:#1D0805; --overlay:rgba(0,0,0,.8);
+  --f-display:'Cinzel',Georgia,serif; --f-brand:'Cinzel Decorative','Cinzel',Georgia,serif; --f-body:'EB Garamond',Georgia,'Times New Roman',serif; --f-mono:'Cinzel',Georgia,serif;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:17px;line-height:1.4;
+  padding-block:0 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1040px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;margin:0;text-wrap:balance;letter-spacing:.01em}
+h1{font-size:30px} h2{font-size:22px} h3{font-size:18px}
+p{margin:0}
+.muted{color:var(--muted)} .sm{font-size:14px} .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.grow{flex:1;min-width:0}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* top bars */
+.bar-top{display:flex;align-items:center;gap:12px;padding:14px 0;flex-wrap:wrap;max-width:1040px;margin:0 auto}
+.brand{font-family:var(--f-display);font-weight:700;font-size:24px;letter-spacing:.02em}
+.brand.big{font-size:40px}
+.bar-top nav{display:flex;gap:4px;margin-left:8px;flex:1}
+.nav-b{background:none;border:0;padding:8px 12px;border-radius:8px;font-weight:700;color:var(--muted)}
+.nav-b.on{background:var(--surface2);color:var(--fg)}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:15px}
+.chip.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chips.ember .chip.on{background:var(--ember);color:var(--ember-fg);border-color:var(--ember)}
+.bar-top.campaign{border-bottom:2px solid var(--accent)}
+.bar-top.campaign.dm{border-bottom-color:var(--ember)}
+.ct{flex:1;min-width:140px}.ctitle{font-family:var(--f-display);font-weight:700;font-size:21px;line-height:1.1}
+
+/* buttons */
+.btn{border:1px solid var(--line);background:var(--surface);padding:10px 16px;border-radius:10px;font-weight:700;min-height:44px}
+.btn.sm{padding:6px 12px;min-height:36px;font-size:15px}
+.btn.xs{padding:2px 9px;min-height:30px;font-size:14px;border-radius:8px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.ember{background:var(--ember);border-color:var(--ember);color:var(--ember-fg)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--bad);border-color:var(--bad);background:transparent}
+.btn.dsolid{background:var(--bad);border-color:var(--bad);color:var(--bad-fg)}
+.btn:hover{filter:brightness(1.06)}
+.btn[disabled]{opacity:.5;cursor:default}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:var(--surface2);color:var(--muted)}
+.pill.acc{background:var(--accent-soft);color:var(--accent)}
+.pill.ember{background:var(--ember-soft);color:var(--ember)}
+
+/* surfaces */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.note{background:var(--accent-soft);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:15px}
+.note.ember{background:var(--ember-soft)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.page-h{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 14px}
+.filters{display:flex;gap:6px;margin-bottom:14px}
+
+.camp{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px;min-height:120px}
+.camp:hover{border-color:var(--accent)}
+.camp .nm{font-family:var(--f-display);font-weight:700;font-size:21px;line-height:1.15}
+.camp .meta{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:15px}
+.camp .meta b{color:var(--fg)}
+.camp.is-done{opacity:.72}
+
+/* tabs */
+.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line);margin-bottom:16px;scrollbar-width:thin}
+.tab{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;font-weight:700;color:var(--muted);white-space:nowrap}
+.tab.on{color:var(--fg);border-bottom-color:var(--accent)}
+.tabs.dm .tab.on{border-bottom-color:var(--ember)}
+
+/* art */
+.art{--h:200;width:var(--s,64px);height:var(--s,64px);border-radius:14px;flex:none;display:grid;place-items:center;color:#fff;
+  font-family:var(--f-display);font-weight:700;font-size:calc(var(--s,64px)*.38);
+  background:linear-gradient(150deg,hsl(var(--h) 52% 40%),hsl(calc(var(--h) + 45) 58% 22%));overflow:hidden}
+img.art{object-fit:cover;display:block}
+.charcard{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;gap:14px;align-items:center;width:100%}
+.charcard:hover{border-color:var(--accent)}
+.charcard .nm{font-family:var(--f-display);font-weight:700;font-size:19px;line-height:1.15}
+.tile{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+
+/* forms */
+input,select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;width:100%;min-height:44px}
+textarea{min-height:110px;resize:vertical}
+.in-sm{width:72px;min-height:36px;padding:4px 8px;text-align:center;font-family:var(--f-mono)}
+.lbl{font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.seg{display:flex;background:var(--surface2);border-radius:12px;padding:4px;gap:4px;margin:18px 0}
+.seg button{flex:1;border:0;background:none;padding:9px 6px;border-radius:9px;font-weight:700;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--fg)}
+.auth{max-width:420px;margin:0 auto;padding-top:min(12vh,90px);text-align:center}
+.auth .card{text-align:left}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* sheet */
+.hero{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.hero .nm{font-family:var(--f-display);font-weight:700;font-size:26px;line-height:1.1}
+.bar{height:12px;border-radius:99px;background:var(--surface2);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:99px;background:var(--good)}
+.bar.warn>i{background:var(--warn)}.bar.bad>i{background:var(--bad)}
+.hp-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hp-num{font-family:var(--f-mono);font-weight:600;font-size:22px;min-width:92px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px}
+.stat{background:var(--surface2);border-radius:12px;padding:10px;text-align:center}
+.stat .v{font-family:var(--f-mono);font-weight:600;font-size:24px}
+.stat .k{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.abils{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px}
+.ab{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center;display:flex;flex-direction:column;gap:4px;align-items:center}
+.ab-l{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.08em}
+.ab-m{font-family:var(--f-mono);font-weight:600;font-size:28px}
+.ab-s{font-family:var(--f-mono);font-size:14px;color:var(--muted)}
+.skills{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:2px 18px}
+.sk{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
+.sk-n{flex:1;min-width:0}.sk-n em{font-style:normal;font-size:12px;color:var(--muted);letter-spacing:.06em}
+.dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--muted);background:none;padding:0;flex:none;display:inline-block}
+.dot.on{background:var(--accent);border-color:var(--accent)}
+button.dot{width:22px;height:22px}
+.sec{margin-top:20px}.sec>h3{margin-bottom:10px}
+.editgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.editgrid label,.editgrid>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.editgrid input,.editgrid select{min-height:40px}
+
+/* spells / gear */
+.pips{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pip{width:26px;height:26px;border-radius:50%;border:2px solid var(--accent);background:var(--accent);padding:0}
+.pip.spent{background:none}
+.slotrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line)}
+.spell{border-top:1px solid var(--line);padding:10px 0}
+.spell:first-child{border-top:0}
+.spell b{font-family:var(--f-display);font-size:18px}
+.gear{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.coins{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.coin{background:var(--surface2);border-radius:12px;padding:10px;text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center}
+.coin .k{font-weight:700;font-size:13px;letter-spacing:.08em;color:var(--muted)}
+.coin input{text-align:center;font-family:var(--f-mono);font-size:20px}
+
+/* encounter */
+.crow{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.crow.turn{border-color:var(--ember);box-shadow:0 0 0 2px var(--ember-soft)}
+.crow.turn.pl{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.iv{width:56px;min-height:44px;font-family:var(--f-mono);font-weight:600;font-size:20px;text-align:center;padding:4px}
+.ivs{display:grid;place-items:center;width:44px;height:44px;border-radius:10px;background:var(--surface2);font-family:var(--f-mono);font-weight:600;font-size:20px;flex:none}
+.tag{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+/* rolls and dice */
+.roll{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.req{background:var(--ember-soft);border:1px solid var(--ember);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.res{font-family:var(--f-mono);font-weight:600}
+.res.n20{color:var(--gold)}.res.n1{color:var(--bad)}
+.dice{display:flex;gap:6px;flex-wrap:wrap}
+.die{min-width:52px;font-family:var(--f-mono);font-weight:600}
+.last{font-family:var(--f-mono);font-size:34px;font-weight:600;min-width:110px;text-align:center}
+.bignum{font-family:var(--f-mono);font-weight:600;font-size:60px;text-align:center;background:var(--surface2);border-radius:16px;padding:8px;min-height:92px;display:grid;place-items:center}
+.bignum.n20{color:var(--gold)}.bignum.n1{color:var(--bad)}
+.hist{display:flex;gap:10px;flex-wrap:wrap;font-family:var(--f-mono);font-size:14px;color:var(--muted)}
+.divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+@keyframes wob{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(2px,-3px) rotate(-5deg)}50%{transform:translate(-3px,1px) rotate(4deg)}75%{transform:translate(2px,3px) rotate(-3deg)}100%{transform:translate(0,0) rotate(0)}}
+.tumbling{animation:wob .16s linear infinite;opacity:.9}
+@media (prefers-reduced-motion:reduce){.tumbling{animation:none}}
+
+/* modal + toast */
+.modal{position:fixed;inset:0;background:var(--overlay);display:grid;place-items:center;z-index:50;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.modal .card{width:min(500px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);
+  padding:10px 16px;border-radius:12px;font-weight:700;z-index:60;max-width:calc(100vw - 32px);text-align:center}
+.err{color:var(--bad);font-size:15px;font-weight:700}
+.empty{text-align:center;padding:36px 12px;color:var(--muted)}
+@media (max-width:520px){h1{font-size:26px}.brand.big{font-size:34px}.bignum{font-size:52px}}
+
+/* ---- D&D skin ---- */
+body{font-size:19px;background-color:var(--bg);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .32 0 0 0 0 .15 0 0 0 .13 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 50% 28%,transparent 38%,var(--vig) 100%)}
+#app{position:relative;z-index:1}
+h1,h2,h3{letter-spacing:.05em}
+h1{font-size:28px}h2{font-size:21px}h3{font-size:16px}
+.mono{font-variant-numeric:lining-nums tabular-nums}
+.brand{font-family:var(--f-brand);font-size:21px;display:flex;align-items:center;gap:10px;text-shadow:0 1px 0 var(--sheen)}
+.brand svg{width:30px;height:30px;color:var(--foil);flex:none}
+.brand.big{font-size:30px;flex-direction:column;gap:12px;justify-content:center}
+.brand.big svg{width:64px;height:64px}
+.orn{display:flex;align-items:center;gap:12px;margin:0 0 12px;color:var(--foil);font-size:12px;line-height:1}
+.orn::before{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--foil))}
+.orn::after{content:"";flex:1;height:1px;background:linear-gradient(270deg,transparent,var(--foil))}
+.bar-top{padding-bottom:10px}
+.nav-b,.tab,.chip,.lbl,.seg button{font-family:var(--f-display)}
+.nav-b{font-size:14px;letter-spacing:.07em}
+.nav-b.on{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.chip{font-size:13px;letter-spacing:.05em;border-radius:6px}
+.tab{font-size:14px;letter-spacing:.07em}
+.tab.on{border-bottom-color:var(--foil)}
+.tabs.dm .tab.on{border-bottom-color:var(--ember)}
+.lbl{font-size:12px;letter-spacing:.1em}
+.pill{font-family:var(--f-display);border-radius:4px;font-size:11px;letter-spacing:.08em}
+
+/* paper */
+.card,.camp,.charcard,.tile{border-radius:6px;background-color:var(--surface);background-image:radial-gradient(120% 90% at 8% 0%,var(--sheen),transparent 62%);
+  box-shadow:inset 0 0 0 3px var(--surface),inset 0 0 0 4px var(--line-soft),0 12px 24px -16px rgba(0,0,0,.6)}
+.crow,.roll,.req,.note,.stat,.ab,.coin{border-radius:6px}
+.crow,.roll{background:var(--surface)}
+.camp .nm,.charcard .nm{letter-spacing:.04em}
+.camp:hover,.charcard:hover{border-color:var(--foil)}
+.art{border-radius:8px;box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--foil)}
+.sec>h3{display:flex;align-items:center;gap:12px}
+.sec>h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--foil),transparent);opacity:.65}
+.ab-m{width:58px;height:58px;border-radius:50%;border:2px solid var(--foil);display:grid;place-items:center;font-size:21px;background:var(--surface2)}
+.stat{background:var(--surface2);box-shadow:inset 0 0 0 1px var(--line-soft)}
+.bar{border:1px solid var(--line-soft)}
+input,select,textarea{border-radius:6px;background:var(--bg)}
+.in-sm,.coin input,.iv{font-family:var(--f-mono)}
+
+/* buttons */
+.btn{border-radius:6px;font-family:var(--f-display);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.btn.sm{font-size:12px}.btn.xs{font-size:11.5px;border-radius:5px}
+.btn.die{text-transform:none;font-size:14px}
+.btn.primary{background-image:linear-gradient(180deg,rgba(255,255,255,.22),transparent 55%);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 1px 2px rgba(0,0,0,.4)}
+.btn.ember{background-image:linear-gradient(180deg,rgba(255,255,255,.18),transparent 55%);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 1px 2px rgba(0,0,0,.4)}
+
+/* the roll result is a d20 */
+.bignum{width:150px;height:164px;margin:0 auto;border-radius:0;padding:0;font-size:56px;color:#1B1208;
+  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#EBCB74,#B8892A)}
+.bignum.n20{background:linear-gradient(160deg,#FFF0A8,#E0A52C)}
+.bignum.n1{background:linear-gradient(160deg,#C9483C,#741812);color:#FFF1E6}
+.last{font-size:30px}
+.modal{backdrop-filter:blur(2px)}
+@media (max-width:520px){.bignum{font-size:48px}h1{font-size:24px}.brand.big{font-size:26px}}
+
+/* ---- round 3: blood-red DM, spells, level ---- */
+.btn.ember{background-color:var(--ember-bg);border-color:var(--ember);color:var(--ember-fg)}
+.chips.ember .chip.on{background:var(--ember-bg);border-color:var(--ember);color:var(--ember-fg)}
+.lvnum{font-size:30px;min-width:44px;text-align:center;line-height:1}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px}
+.slot{background:var(--surface2);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:10px;box-shadow:inset 0 0 0 1px var(--line-soft)}
+.slot .pip{width:24px;height:24px}
+.sp-head{margin-bottom:2px}
+.sp-grp{margin-top:16px}
+.sp{border-bottom:1px solid var(--line-soft)}
+.sp:last-child{border-bottom:0}
+.sp-h{width:100%;display:flex;align-items:center;gap:10px;background:none;border:0;padding:12px 2px;text-align:left;min-height:48px}
+.sp-n{flex:1;min-width:0;font-family:var(--f-display);font-weight:700;font-size:16px;letter-spacing:.03em}
+.chev{color:var(--muted);transition:transform .15s}
+.sp.open .chev{transform:rotate(90deg)}
+.sp-b{padding:0 2px 14px;display:flex;flex-direction:column;gap:10px}
+@media (prefers-reduced-motion:reduce){.chev{transition:none}}
+
+/* ---- round 4: ability squares, resources, pop-ups, dice controls ---- */
+.abils{grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:16px 12px}
+.ab{position:relative;background:linear-gradient(180deg,var(--surface2),var(--surface));border:2px solid var(--foil);border-radius:8px;
+  padding:10px 6px 24px;gap:0;box-shadow:inset 0 0 0 3px var(--surface),inset 0 0 0 4px var(--line-soft)}
+.ab-l{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--foil)}
+.ab-m{width:auto;height:auto;border:0;border-radius:0;background:none;color:var(--fg);font-size:34px;line-height:1.15;padding:2px 8px;font-family:var(--f-display);font-weight:700}
+button.ab-m{cursor:pointer;min-height:0;border-radius:6px}
+button.ab-m:hover{color:var(--gold);background:var(--accent-soft)}
+.ab-s{position:absolute;left:50%;bottom:-13px;transform:translateX(-50%);min-width:52px;height:26px;display:grid;place-items:center;
+  background:var(--bg);border:2px solid var(--foil);border-radius:999px;color:var(--fg);font-size:14px;padding:0 8px}
+.ab-s .in-sm{width:54px;min-height:0;height:22px;border:0;background:none;text-align:center;padding:0;font-size:14px}
+.abils.mini{grid-template-columns:repeat(3,1fr)}
+.abils.mini .ab-m{font-size:24px;cursor:default}
+.modebar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0 14px}
+.sk{padding:0}
+.sk .dot{margin:0 4px 0 0}
+.sk-roll{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:8px 6px;background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer;border-radius:6px;min-height:40px}
+.sk-roll:hover{background:var(--accent-soft)}
+.sk-roll .mono{margin-left:auto;font-weight:700;color:var(--gold)}
+.gear-n{flex:1;min-width:0;text-align:left;background:none;border:0;color:var(--fg);font:inherit;cursor:pointer;padding:6px 4px;border-radius:6px;min-height:36px;text-decoration:underline;text-decoration-color:var(--line-soft);text-underline-offset:4px}
+.gear-n:hover{color:var(--gold);background:var(--accent-soft)}
+.bigart{display:block;width:100%;max-height:260px;object-fit:contain;background:var(--bg);border:1px solid var(--line-soft);border-radius:8px}
+.bigart.ph{height:150px;display:grid;place-items:center;font-family:var(--f-display);font-size:48px;color:#fff;background:linear-gradient(160deg,hsl(var(--h) 38% 28%),hsl(var(--h) 40% 14%))}
+.desc{white-space:pre-wrap;line-height:1.5}
+.resrow{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:none;border:0;color:inherit;font:inherit;cursor:pointer;padding:0;min-height:48px}
+.resrow:hover b{color:var(--gold)}
+.thumb{width:48px;height:48px;border-radius:8px;object-fit:cover;flex:none;display:grid;place-items:center;color:#fff;font-family:var(--f-display);background:linear-gradient(160deg,hsl(var(--h) 38% 30%),hsl(var(--h) 40% 15%));box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--foil)}
+.clamp1{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.linkb{background:none;border:0;padding:0;color:var(--fg);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline;text-decoration-color:var(--ember);text-underline-offset:4px}
+.modv{min-width:36px;text-align:center;font-size:20px}
+.chip.die-c{min-width:50px;text-align:center}
+.tag.adv{color:var(--good)}.tag.dis{color:var(--bad)}
+.last .sm{display:block}
+.card.wide{width:min(620px,100%)}
+</style>
+
+<div id="app" class="wrap"></div>
+<div id="modal"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const D20='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M12 2 21 7v10l-9 5-9-5V7Z"/><path d="M12 6l5.5 9.5h-11Z"/><path d="M12 6 3 7M12 6l9 1M17.5 15.5 21 17M17.5 15.5 12 22M6.5 15.5 3 17M6.5 15.5 12 22"/></svg>';
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const mod=s=>Math.floor((s-10)/2);
+const sg=n=>n>=0?'+'+n:''+n;
+const prof=l=>Math.ceil(l/4)+1;
+const rnd=n=>1+Math.floor(Math.random()*n);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const fmtDate=d=>new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+const initials=n=>n.split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const ABIL=['str','dex','con','int','wis','cha'];
+const SKILLS=[['Acrobatics','dex'],['Animal Handling','wis'],['Arcana','int'],['Athletics','str'],['Deception','cha'],['History','int'],['Insight','wis'],['Intimidation','cha'],['Investigation','int'],['Medicine','wis'],['Nature','int'],['Perception','wis'],['Performance','cha'],['Persuasion','cha'],['Religion','int'],['Sleight of Hand','dex'],['Stealth','dex'],['Survival','wis']];
+const SAVES=ABIL.map(k=>[{str:'Strength',dex:'Dexterity',con:'Constitution',int:'Intelligence',wis:'Wisdom',cha:'Charisma'}[k]+' save',k]);
+const ABNAME={str:'Strength',dex:'Dexterity',con:'Constitution',int:'Intelligence',wis:'Wisdom',cha:'Charisma'};
+const abLabel=k=>ABNAME[k]+' check';
+const CHECKS=SKILLS.concat(ABIL.map(k=>[abLabel(k),k]),SAVES);
+const XP=[0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,100000,120000,140000,165000,195000,225000,265000,305000,355000,355000];
+const RACES=['Human','Elf','Dwarf','Halfling','Tiefling','Half-Orc','Gnome','Dragonborn','Half-Elf'];
+const CLASSES=['Barbarian','Bard','Cleric','Druid','Fighter','Monk','Paladin','Ranger','Rogue','Sorcerer','Warlock','Wizard'];
+const SUBS={Barbarian:['Berserker','Totem Warrior'],Bard:['Lore','Valor'],Cleric:['Knowledge','Life','Light','Nature','Tempest','Trickery','War'],Druid:['Land','Moon'],Fighter:['Champion','Battle Master','Eldritch Knight'],Monk:['Open Hand','Shadow','Four Elements'],Paladin:['Devotion','Ancients','Vengeance'],Ranger:['Hunter','Beast Master'],Rogue:['Thief','Assassin','Arcane Trickster'],Sorcerer:['Draconic Bloodline','Wild Magic'],Warlock:['Archfey','Fiend','Great Old One'],Wizard:['Abjuration','Conjuration','Divination','Enchantment','Evocation','Illusion','Necromancy','Transmutation']};
+/* name, level, school, classes, short note */
+const SPELLBOOK=[
+['Acid Splash',0,'Conjuration','Sorcerer,Wizard','Hurl a bubble of acid at one or two creatures close together.'],
+['Chill Touch',0,'Necromancy','Sorcerer,Warlock,Wizard','A ghostly hand deals necrotic damage and stops the target healing.'],
+['Eldritch Blast',0,'Evocation','Warlock','A crackling beam of force. You fire more beams as you level.'],
+['Fire Bolt',0,'Evocation','Sorcerer,Wizard','Hurl a mote of fire at a creature or object in range.'],
+['Guidance',0,'Divination','Cleric,Druid','A willing creature adds a small bonus to one ability check.'],
+['Light',0,'Evocation','Bard,Cleric,Sorcerer,Wizard','Make an object shine like a torch.'],
+['Mage Hand',0,'Conjuration','Bard,Sorcerer,Warlock,Wizard','A spectral hand that can carry and manipulate small things.'],
+['Minor Illusion',0,'Illusion','Bard,Sorcerer,Warlock,Wizard','Create a small sound or image that lasts a minute.'],
+['Prestidigitation',0,'Transmutation','Bard,Sorcerer,Warlock,Wizard','Minor tricks: clean, warm, flavour, or leave a small mark.'],
+['Produce Flame',0,'Conjuration','Druid','A flame in your hand that sheds light and can be thrown.'],
+['Ray of Frost',0,'Evocation','Sorcerer,Wizard','A frigid beam that damages and slows its target.'],
+['Sacred Flame',0,'Evocation','Cleric','Radiance falls on a creature you can see.'],
+['Vicious Mockery',0,'Enchantment','Bard','Insult a creature to deal psychic damage and hamper its next attack.'],
+['Armor of Agathys',1,'Abjuration','Warlock','Gain temporary hit points and chill anyone who hits you.'],
+['Bless',1,'Enchantment','Cleric,Paladin','Up to three allies add a die to attacks and saves.'],
+['Burning Hands',1,'Evocation','Sorcerer,Wizard','A cone of flame sprays from your fingers.'],
+['Charm Person',1,'Enchantment','Bard,Druid,Sorcerer,Warlock,Wizard','A humanoid regards you as a friendly acquaintance for a while.'],
+['Cure Wounds',1,'Evocation','Bard,Cleric,Druid,Paladin,Ranger','Touch a creature to restore hit points.'],
+['Detect Magic',1,'Divination','Bard,Cleric,Druid,Paladin,Ranger,Sorcerer,Wizard','Sense magic nearby and learn its school.'],
+['Disguise Self',1,'Illusion','Bard,Sorcerer,Wizard','Change your appearance for an hour.'],
+['Faerie Fire',1,'Evocation','Bard,Druid','Outline creatures in light so they cannot hide and are easier to hit.'],
+['Healing Word',1,'Evocation','Bard,Cleric,Druid','Bonus action. Restore a few hit points to a creature at range.'],
+['Hex',1,'Enchantment','Warlock','Curse a target for bonus damage and disadvantage on one ability\'s checks.'],
+['Hunter\'s Mark',1,'Divination','Ranger','Mark a quarry for bonus damage and easy tracking.'],
+['Magic Missile',1,'Evocation','Sorcerer,Wizard','Three darts of force that always hit.'],
+['Shield',1,'Abjuration','Sorcerer,Wizard','Reaction. A barrier raises your AC and blocks magic missiles.'],
+['Sleep',1,'Enchantment','Bard,Sorcerer,Wizard','Put weak creatures to sleep, lowest hit points first.'],
+['Thunderwave',1,'Evocation','Bard,Druid,Sorcerer,Wizard','A wave of thunder damages and shoves nearby creatures.'],
+['Hold Person',2,'Enchantment','Bard,Cleric,Druid,Sorcerer,Warlock,Wizard','Try to paralyze a humanoid. It can retry each turn.'],
+['Invisibility',2,'Illusion','Bard,Sorcerer,Warlock,Wizard','A creature vanishes until it attacks or casts.'],
+['Lesser Restoration',2,'Abjuration','Bard,Cleric,Druid,Paladin,Ranger','End a disease or a condition like blinded or poisoned.'],
+['Misty Step',2,'Conjuration','Sorcerer,Warlock,Wizard','Bonus action. Teleport up to 30 ft to a space you can see.'],
+['Pass Without Trace',2,'Abjuration','Druid,Ranger','Your group gets a large bonus to stealth.'],
+['Scorching Ray',2,'Evocation','Sorcerer,Wizard','Three rays of fire, each with its own attack roll.'],
+['Shatter',2,'Evocation','Bard,Sorcerer,Warlock,Wizard','A painful ringing noise damages everything in a small burst.'],
+['Spiritual Weapon',2,'Evocation','Cleric','A floating weapon attacks as a bonus action.'],
+['Web',2,'Conjuration','Sorcerer,Wizard','Sticky webs fill an area and restrain creatures in them.'],
+['Counterspell',3,'Abjuration','Sorcerer,Warlock,Wizard','Reaction. Interrupt a creature that is casting a spell.'],
+['Dispel Magic',3,'Abjuration','Bard,Cleric,Druid,Paladin,Sorcerer,Warlock,Wizard','End a spell on a creature, object or area.'],
+['Fireball',3,'Evocation','Sorcerer,Wizard','A bright streak blooms into a large burst of flame.'],
+['Fly',3,'Transmutation','Sorcerer,Warlock,Wizard','A willing creature gains a flying speed for a while.'],
+['Haste',3,'Transmutation','Sorcerer,Wizard','Double speed, extra action and a boost to AC for a willing creature.'],
+['Hypnotic Pattern',3,'Illusion','Bard,Sorcerer,Warlock,Wizard','A twisting pattern leaves creatures charmed and incapacitated.'],
+['Lightning Bolt',3,'Evocation','Sorcerer,Wizard','A line of lightning blasts everything along it.'],
+['Revivify',3,'Necromancy','Cleric,Paladin','Bring back a creature that died within the last minute.'],
+['Spirit Guardians',3,'Conjuration','Cleric','Spirits swirl around you and hurt enemies who come near.'],
+['Banishment',4,'Abjuration','Cleric,Paladin,Sorcerer,Warlock,Wizard','Send a creature to another plane while you concentrate.'],
+['Dimension Door',4,'Conjuration','Bard,Sorcerer,Warlock,Wizard','Teleport yourself, and maybe a companion, a long way.'],
+['Greater Invisibility',4,'Illusion','Bard,Sorcerer,Wizard','Invisible even while attacking or casting.'],
+['Polymorph',4,'Transmutation','Bard,Druid,Sorcerer,Wizard','Turn a creature into a beast.'],
+['Wall of Fire',4,'Evocation','Druid,Sorcerer,Wizard','A blazing wall that burns anything near or crossing it.'],
+['Cone of Cold',5,'Evocation','Sorcerer,Wizard','A blast of cold air from your hands.'],
+['Hold Monster',5,'Enchantment','Bard,Sorcerer,Warlock,Wizard','Like Hold Person, but works on any creature.'],
+['Raise Dead',5,'Necromancy','Bard,Cleric,Paladin','Return a recently dead creature to life, weakened.'],
+['Telekinesis',5,'Transmutation','Sorcerer,Wizard','Move creatures or objects with your mind.'],
+['Wall of Force',5,'Evocation','Wizard','An invisible wall nothing can pass through.']
+];
+
+/* ---------- demo data ---------- */
+const chars=[
+ {id:'ysolde',name:'Ysolde Vane',race:'Tiefling',cls:'Warlock',sub:'Fiend',owner:'Mohammed',createdBy:'Mohammed',created:'2026-08-12',age:27,height:'5\'11"',hue:285,art:null,
+  abil:{str:8,dex:14,con:14,int:12,wis:10,cha:17},ac:13,speed:30,skills:['Deception','Arcana','Intimidation'],
+  lore:'Raised in the lantern markets of Port Calder, Ysolde struck a bargain at fourteen with something that answers to the name Vesper. It has asked for very little so far, which worries her more than a demand would.',
+  spells:[{n:'Eldritch Blast',l:0,s:'Evocation',t:'A crackling beam of force. You fire more beams as you level.'},{n:'Hex',l:1,s:'Enchantment',t:'Curse a target for bonus damage and disadvantage on one ability\'s checks.'},{n:'Misty Step',l:2,s:'Conjuration',t:'Bonus action. Teleport up to 30 ft to a space you can see.'},{n:'Hold Person',l:2,s:'Enchantment',t:'Try to paralyze a humanoid. It can retry each turn.'},{n:'Counterspell',l:3,s:'Abjuration',t:'Reaction. Interrupt a creature that is casting a spell.'}],
+  prog:{
+   crown:{level:5,exp:6500,hp:31,max:38,slots:[{l:3,max:2,used:1}],gear:[{n:'Quarterstaff',q:1,eq:1},{n:'Crystal arcane focus',q:1,eq:1},{n:'Potion of healing',q:2,eq:0},{n:'Rope, 50 ft',q:1,eq:0}],money:{gp:142,sp:8,cp:3}},
+   goblin:{level:1,exp:0,hp:9,max:9,slots:[{l:1,max:1,used:0}],gear:[{n:'Dagger',q:2,eq:1},{n:'Scholar\'s pack',q:1,eq:0}],money:{gp:12,sp:0,cp:0}}}},
+ {id:'brannoc',name:'Brannoc Ironhide',race:'Dwarf',cls:'Fighter',sub:'Champion',owner:'Mohammed',createdBy:'Mohammed',created:'2026-05-03',age:112,height:'4\'6"',hue:28,art:null,
+  abil:{str:17,dex:10,con:16,int:8,wis:12,cha:10},ac:18,speed:25,skills:['Athletics','Intimidation','Perception'],
+  lore:'Brannoc spent forty years guarding a mountain gate that nobody ever attacked. When the gate was sold, he took his shield and left to find out what he had been protecting everyone from.',
+  spells:[],
+  prog:{frost:{level:8,exp:34000,hp:79,max:84,slots:[],gear:[{n:'Warhammer',q:1,eq:1},{n:'Tower shield',q:1,eq:1},{n:'Chain mail',q:1,eq:1},{n:'Ale, small cask',q:1,eq:0}],money:{gp:610,sp:0,cp:0}}}},
+ {id:'mirel',name:'Mirel Ashwood',race:'Elf',cls:'Rogue',sub:'Thief',owner:'Layla',createdBy:'Layla',created:'2026-06-20',age:134,height:'5\'7"',hue:160,art:null,
+  abil:{str:10,dex:18,con:12,int:13,wis:14,cha:12},ac:15,speed:30,skills:['Stealth','Sleight of Hand','Perception','Acrobatics'],
+  lore:'A courier who learned the back alleys of three cities and never once delivered a letter she had not read first.',spells:[],
+  prog:{crown:{level:5,exp:6500,hp:36,max:36,slots:[],gear:[{n:'Shortsword',q:1,eq:1},{n:'Thieves\' tools',q:1,eq:0}],money:{gp:88,sp:4,cp:0}},goblin:{level:1,exp:0,hp:9,max:9,slots:[],gear:[{n:'Shortbow',q:1,eq:1}],money:{gp:10,sp:0,cp:0}}}},
+ {id:'pip',name:'Pip Underfoot',race:'Halfling',cls:'Bard',sub:'Lore',owner:'Omar',createdBy:'Omar',created:'2026-07-01',age:31,height:'3\'0"',hue:48,art:null,
+  abil:{str:8,dex:14,con:12,int:10,wis:11,cha:17},ac:14,speed:25,skills:['Performance','Persuasion','Deception'],
+  lore:'Pip\'s songs are mostly true, and the parts that are not are usually an improvement.',
+  spells:[{n:'Vicious Mockery',l:0,s:'Enchantment',t:'Insult a creature to deal psychic damage and hamper its next attack.'},{n:'Healing Word',l:1,s:'Evocation',t:'Bonus action. Restore a few hit points to a creature at range.'},{n:'Faerie Fire',l:1,s:'Evocation',t:'Outline creatures in light so they cannot hide and are easier to hit.'}],
+  prog:{crown:{level:5,exp:6500,hp:33,max:33,slots:[{l:1,max:4,used:1},{l:2,max:3,used:0},{l:3,max:2,used:0}],gear:[{n:'Lute',q:1,eq:1},{n:'Rapier',q:1,eq:1}],money:{gp:57,sp:0,cp:9}},frost:{level:7,exp:23000,hp:49,max:49,slots:[],gear:[{n:'Lute',q:1,eq:1}],money:{gp:300,sp:0,cp:0}}}},
+ {id:'gorm',name:'Gorm the Quiet',race:'Half-Orc',cls:'Barbarian',sub:'Berserker',owner:null,createdBy:'Sara (guest)',created:'2026-10-30',age:24,height:'6\'4"',hue:350,art:null,
+  abil:{str:16,dex:12,con:15,int:8,wis:10,cha:8},ac:14,speed:30,skills:['Athletics','Survival'],
+  lore:'Gorm says very little. When he does, people tend to move their furniture out of the way.',spells:[],
+  prog:{vael:{level:1,exp:0,hp:15,max:15,slots:[],gear:[{n:'Greataxe',q:1,eq:1},{n:'Javelin',q:4,eq:0}],money:{gp:9,sp:0,cp:0}}}}
+];
+const camps=[
+ {id:'crown',name:'The Sunken Crown',session:12,dm:'Karim',status:'active',code:'CROWN-4821',pw:'dragon',
+  members:[{player:'Mohammed',charId:'ysolde'},{player:'Layla',charId:'mirel'},{player:'Omar',charId:'pip'}],
+  npcs:[{id:'n1',name:'Harbormaster Velka',note:'Owes the party a favour.',vis:true},{id:'n2',name:'The Veiled Cantor',note:'Secretly serves the Drowned Court.',vis:false}],
+  init:{round:1,turn:0,list:[{id:'i1',kind:'pc',charId:'mirel',init:19},{id:'i2',kind:'monster',name:'Wolf',init:15,hp:11,max:11,dex:2},{id:'i3',kind:'pc',charId:'ysolde',init:14},{id:'i4',kind:'monster',name:'Goblin Boss',init:12,hp:21,max:21,dex:2},{id:'i5',kind:'pc',charId:'pip',init:11}]},
+  prompts:[{id:'p1',label:'Perception',targets:['Mohammed','Layla','Omar'],res:{Layla:{d:14,b:7,t:21,ch:'Mirel Ashwood'},Omar:{d:5,b:1,t:6,ch:'Pip Underfoot'}}}],ctrl:{}},
+ {id:'vael',name:'Ashes of Vael',session:4,dm:'Mohammed',status:'active',code:'VAEL-1190',pw:'ember',
+  members:[{player:'Sara',charId:'gorm'}],npcs:[],init:{round:1,turn:0,list:[]},prompts:[],ctrl:{}},
+ {id:'goblin',name:'The Goblin Road',session:1,dm:'Omar',status:'active',code:'ROAD-7305',pw:'goblin',
+  members:[{player:'Mohammed',charId:'ysolde'},{player:'Layla',charId:'mirel'}],npcs:[],init:{round:1,turn:0,list:[]},prompts:[],ctrl:{}},
+ {id:'frost',name:'Frostmarch Heist',session:7,dm:'Layla',status:'done',code:'FROST-6612',pw:'heist',
+  members:[{player:'Mohammed',charId:'brannoc'},{player:'Omar',charId:'pip'}],npcs:[],init:{round:1,turn:0,list:[]},prompts:[],ctrl:{}}
+];
+
+/* ---------- round 4: official resources (starter set) ---------- */
+const MON=(name,cr,type,ac,hp,speed,a,d)=>({name,cr,type,ac,hp,speed,abil:{str:a[0],dex:a[1],con:a[2],int:a[3],wis:a[4],cha:a[5]},d});
+const MONSTERS=[
+ MON('Goblin','1/4','Small humanoid',15,7,30,[8,14,10,10,8,8],'Nimble Escape. Can Disengage or Hide as a bonus action on each of its turns.\nScimitar. +4 to hit, reach 5 ft. 5 (1d6+2) slashing.\nShortbow. +4 to hit, range 80/320 ft. 5 (1d6+2) piercing.'),
+ MON('Kobold','1/8','Small humanoid',12,5,30,[7,15,9,8,7,8],'Pack Tactics. Advantage on attacks if an ally is within 5 ft of the target.\nSunlight Sensitivity. Disadvantage on attacks and sight checks in sunlight.\nDagger. +4 to hit, 4 (1d4+2) piercing.'),
+ MON('Giant Rat','1/8','Small beast',12,7,30,[7,15,11,2,10,4],'Keen Smell. Advantage on smell-based Perception checks.\nBite. +4 to hit, 4 (1d4+2) piercing.'),
+ MON('Wolf','1/4','Medium beast',13,11,40,[12,15,12,3,12,6],'Pack Tactics. Advantage on attacks if an ally is within 5 ft of the target.\nBite. +4 to hit, 7 (2d4+2) piercing. A Medium or smaller target must succeed on a DC 11 Strength save or be knocked prone.'),
+ MON('Skeleton','1/4','Medium undead',13,13,30,[10,14,15,6,8,5],'Vulnerable to bludgeoning. Immune to poison and exhaustion.\nShortsword. +4 to hit, 5 (1d6+2) piercing.\nShortbow. +4 to hit, range 80/320 ft. 5 (1d6+2) piercing.'),
+ MON('Zombie','1/4','Medium undead',8,22,20,[13,6,16,3,6,5],'Undead Fortitude. When reduced to 0 HP by non-radiant, non-critical damage, makes a DC 5 + damage Constitution save to drop to 1 HP instead.\nSlam. +3 to hit, 4 (1d6+1) bludgeoning.'),
+ MON('Bandit','1/8','Medium humanoid',12,11,30,[11,12,12,10,10,10],'Scimitar. +3 to hit, 4 (1d6+1) slashing.\nLight Crossbow. +3 to hit, range 80/320 ft. 5 (1d8+1) piercing.'),
+ MON('Cultist','1/8','Medium humanoid',12,9,30,[11,12,10,10,11,10],'Dark Devotion. Advantage on saves against being charmed or frightened.\nScimitar. +3 to hit, 4 (1d6+1) slashing.'),
+ MON('Hobgoblin','1/2','Medium humanoid',18,11,30,[13,12,12,10,10,9],'Martial Advantage. Once per turn, deals an extra 7 (2d6) damage to a target if an ally is within 5 ft of it.\nLongsword. +3 to hit, 5 (1d8+1) slashing.\nLongbow. +3 to hit, range 150/600 ft. 5 (1d8+1) piercing.'),
+ MON('Orc','1/2','Medium humanoid',13,15,30,[16,12,16,7,11,10],'Aggressive. Can move up to its speed toward a hostile creature as a bonus action.\nGreataxe. +5 to hit, 9 (1d12+3) slashing.\nJavelin. +5 to hit, range 30/120 ft. 6 (1d6+3) piercing.'),
+ MON('Ghoul','1','Medium undead',12,22,30,[13,15,10,7,10,6],'Claws. +4 to hit, 7 (2d4+2) slashing. If the target is not undead, DC 10 Constitution save or be paralyzed for 1 minute (repeats the save at the end of each of its turns).\nBite. +2 to hit, 9 (2d6+2) piercing.'),
+ MON('Giant Spider','1','Large beast',14,26,'30 ft., climb 30 ft.',[14,16,12,2,11,4],'Spider Climb. Walks on ceilings and difficult surfaces.\nWeb Walker. Ignores movement restrictions from webs.\nBite. +5 to hit, 7 (1d8+3) piercing and the target makes a DC 11 Constitution save, taking 9 (2d8) poison damage on a failure (half on success). If reduced to 0 HP by the poison, it is stable but poisoned and paralyzed.\nWeb (Recharge 5-6). +5 to hit, range 30/60 ft. The target is restrained.'),
+ MON('Brown Bear','1','Large beast',11,34,'40 ft., climb 30 ft.',[19,10,16,2,13,7],'Keen Smell. Advantage on smell-based Perception checks.\nMultiattack. One bite and one claw.\nBite. +6 to hit, 8 (1d8+4) piercing.\nClaws. +6 to hit, 11 (2d6+4) slashing.'),
+ MON('Ogre','2','Large giant',11,59,40,[19,8,16,5,7,7],'Greatclub. +6 to hit, reach 5 ft. 13 (2d8+4) bludgeoning.\nJavelin. +6 to hit, range 30/120 ft. 11 (2d6+4) piercing.'),
+ MON('Mimic','2','Medium monstrosity',12,58,15,[17,12,15,5,13,8],'Shapechanger. Can look like an object, usually a chest or door.\nAdhesive. Sticks to anything that touches it; Grappler (advantage on grapple checks).\nPseudopod. +5 to hit, 7 (1d8+3) bludgeoning, and if the mimic is in object form the target is stuck to it.\nBite. +5 to hit, 7 (1d8+3) piercing plus 4 (1d8) acid.'),
+ MON('Owlbear','3','Large monstrosity',13,59,40,[20,12,17,3,12,7],'Keen Sight and Smell. Advantage on sight- and smell-based Perception checks.\nMultiattack. One beak and one claw.\nBeak. +7 to hit, 10 (1d10+5) piercing.\nClaws. +7 to hit, 14 (2d8+5) slashing.'),
+ MON('Gelatinous Cube','2','Large ooze',6,84,15,[14,3,20,1,6,1],'Ooze Cube. Fills a 10 ft. cube; can engulf creatures as it moves.\nTransparent. DC 15 Perception to notice it if it has neither moved nor attacked.\nPseudopod. +4 to hit, 10 (3d6) acid.\nEngulf. A creature in its path makes a DC 12 Dexterity save or is engulfed, restrained and takes 21 (6d6) acid damage at the start of each of the cube\'s turns.'),
+ MON('Troll','5','Large giant',15,84,30,[18,13,20,7,9,7],'Keen Smell. Advantage on smell-based Perception checks.\nRegeneration. Regains 10 HP at the start of its turn, unless it took acid or fire damage since then.\nMultiattack. One bite and two claws.\nBite. +7 to hit, 7 (1d6+4) piercing.\nClaw. +7 to hit, 11 (2d6+4) slashing.')
+];
+const ITEMS=[
+ ['Dagger','Weapon','Simple melee weapon. 1d4 piercing. Finesse, light, thrown (range 20/60).'],
+ ['Quarterstaff','Weapon','Simple melee weapon. 1d6 bludgeoning, or 1d8 when wielded with two hands. Versatile.'],
+ ['Shortsword','Weapon','Martial melee weapon. 1d6 piercing. Finesse, light.'],
+ ['Rapier','Weapon','Martial melee weapon. 1d8 piercing. Finesse.'],
+ ['Longsword','Weapon','Martial melee weapon. 1d8 slashing, or 1d10 with two hands. Versatile.'],
+ ['Greataxe','Weapon','Martial melee weapon. 1d12 slashing. Heavy, two-handed.'],
+ ['Warhammer','Weapon','Martial melee weapon. 1d8 bludgeoning, or 1d10 with two hands. Versatile.'],
+ ['Shortbow','Weapon','Simple ranged weapon. 1d6 piercing. Range 80/320. Two-handed.'],
+ ['Longbow','Weapon','Martial ranged weapon. 1d8 piercing. Range 150/600. Heavy, two-handed.'],
+ ['Light crossbow','Weapon','Simple ranged weapon. 1d8 piercing. Range 80/320. Loading, two-handed.'],
+ ['Javelin','Weapon','Simple melee weapon. 1d6 piercing. Thrown (range 30/120).'],
+ ['Leather armor','Armor','Light armor. AC 11 + Dex modifier.'],
+ ['Chain mail','Armor','Heavy armor. AC 16. Requires Strength 13. Disadvantage on Stealth.'],
+ ['Tower shield','Armor','A shield grants +2 AC while held. Needs one free hand.'],
+ ['Potion of healing','Potion','Drink or administer as an action. Restores 2d4 + 2 hit points.'],
+ ['Potion of greater healing','Potion','Restores 4d4 + 4 hit points.'],
+ ['Antitoxin','Potion','Advantage on saving throws against poison for 1 hour.'],
+ ['Rope, 50 ft','Gear','Hempen rope, 2 hit points, DC 17 Strength check to burst.'],
+ ['Torch','Gear','Burns for 1 hour, bright light in 20 ft and dim light another 20 ft.'],
+ ['Thieves\' tools','Tool','Lets you add proficiency to checks to pick locks and disarm traps.'],
+ ['Healer\'s kit','Tool','Ten uses. Stabilize a creature at 0 HP without a Medicine check.'],
+ ['Spell scroll (cantrip)','Scroll','A scroll that holds one cantrip. Cast it by reading, then it crumbles.'],
+ ['Crystal arcane focus','Gear','A spellcasting focus for sorcerers, warlocks and wizards.'],
+ ['Holy symbol','Gear','A spellcasting focus for clerics and paladins.'],
+ ['Bag of holding','Wondrous item','The inside is much larger than the outside: up to 500 lb, 64 cubic feet, weighs 15 lb.'],
+ ['Cloak of protection','Wondrous item','Requires attunement. +1 bonus to AC and saving throws.'],
+ ['Ring of protection','Ring','Requires attunement. +1 bonus to AC and saving throws.'],
+ ['Longsword +1','Weapon','Magic weapon. +1 bonus to attack and damage rolls.'],
+ ['Boots of elvenkind','Wondrous item','Your steps make no sound. Advantage on Dexterity (Stealth) checks that rely on moving silently.'],
+ ['Rations (1 day)','Gear','Dry food suitable for extended travel.']
+];
+const NPC_OFF=[
+ ['Innkeeper','Friendly, knows every rumor','Runs the local inn. Knows who is passing through, what people are whispering, and how to keep a straight face about it.'],
+ ['Town guard','Stern, by the book','Patrols the streets. Suspicious of strangers with weapons drawn, easy to bribe only if nobody is watching.'],
+ ['Traveling merchant','Cheerful, overcharges','Sells mundane gear and the occasional odd trinket. Will haggle if you can make them laugh.'],
+ ['Noble','Proud, well connected','Holds land and grudges. Will help the party if it costs them nothing and gains them standing.'],
+ ['Village priest','Gentle, keeps secrets','Tends the shrine and the flock. Knows more about the village\'s past than they let on.'],
+ ['Retired adventurer','Gruff, scarred','Left the road after one bad dungeon. Can point the party at old maps, for a price or a favor.'],
+ ['Street urchin','Quick, sharp-eyed','Sees everything in the market district. Trades information for coin or food.'],
+ ['Hooded stranger','Quiet, watching','Seems to turn up wherever trouble starts. Motives unclear.']
+];
+const mapSvg=k=>{
+  const g='#C9A24A',s=(b)=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#0F0B0A"/><g fill="none" stroke="${g}" stroke-width="3" stroke-linejoin="round">${b}</g></svg>`;
+  const body={
+    tavern:'<rect x="30" y="30" width="340" height="240"/><rect x="30" y="30" width="110" height="70" stroke-width="2"/><path d="M185 270v-14h30v14" stroke="#0F0B0A" stroke-width="6"/><circle cx="110" cy="170" r="22"/><circle cx="200" cy="140" r="22"/><circle cx="290" cy="190" r="22"/><circle cx="300" cy="90" r="22"/><rect x="48" y="48" width="74" height="18" stroke-width="2"/>',
+    dungeon:'<rect x="30" y="30" width="110" height="90"/><rect x="260" y="30" width="110" height="90"/><rect x="145" y="190" width="110" height="80"/><path d="M140 75h120M85 120v35h115v35M315 120v35h-115" /><path d="M200 190v-35" stroke-width="2"/><rect x="60" y="215" width="50" height="50" stroke-width="2"/><path d="M110 240h35" />',
+    region:'<path d="M20 200c40-30 70-10 100-40s60-50 90-30 50 30 90 10 50-10 80 0"/><path d="M60 90l25-45 25 45zM110 100l20-35 20 35zM300 80l28-50 28 50z" stroke-width="2"/><path d="M20 250c60-20 120 20 180 0s120-20 180 0" stroke-width="2"/><path d="M215 170l22 22M237 170l-22 22" stroke="#E4584B" stroke-width="5"/>'
+  }[k];
+  return 'data:image/svg+xml;utf8,'+encodeURIComponent(s(body));
+};
+const MAPS_OFF=[
+ ['Tavern floor plan','A single-room inn with a bar, four tables and a front door.','tavern'],
+ ['Dungeon sketch','Three chambers joined by narrow corridors.','dungeon'],
+ ['Region map','Coast, mountains and an X where something is buried.','region']
+];
+
+/* ---------- state ---------- */
+const S={user:{name:'Mohammed',guest:false},authMode:'signin',screen:'campaigns',filter:'all',campId:null,role:null,tab:null,
+  charId:null,charTab:'info',charCamp:null,openSheet:null,modal:null,last:null,hist:[],rolling:false,rollSel:[],rollCheck:'Perception',rollKind:'skill',rollWho:'__all',logF:'all',
+  cust:{},saved:{},mode:'n',pick:{},die:20,mod:0,resCat:'mons',rollMode:'n',seen:{},slotEdit:false,spLvF:'all',openSp:{},dismiss:{},rpDone:null,toastT:0};
+const DMTABS=[['party','Party'],['init','Encounter'],['rolls','Rolls'],['res','Resources'],['log','Log'],['settings','Settings']];
+const PTABS=[['sheet','Sheet'],['enc','Encounter'],['party','Party'],['spells','Spells'],['gear','Gear & gold'],['log','Log']];
+
+const curCamp=()=>camps.find(c=>c.id===S.campId);
+const ch$=id=>chars.find(x=>x.id===id);
+const P=(ch,cid)=>{ if(!ch.prog[cid]) ch.prog[cid]={level:1,exp:0,hp:10,max:10,slots:[],gear:[],money:{gp:15,sp:0,cp:0}}; return ch.prog[cid]; };
+const ownerOf=(c,id)=>{const m=c.members.find(m=>m.charId===id);return m&&m.player;};
+const controller=(c,id)=>c.ctrl[id]||ownerOf(c,id);
+const ctrlChars=c=>c.members.filter(m=>controller(c,m.charId)===S.user.name).map(m=>ch$(m.charId));
+const myChar=c=>{const l=ctrlChars(c);return l.find(x=>x.id===S.pick[c.id])||l[0]||null;};
+const initChar=c=>ctrlChars(c).find(x=>!c.init.rolled[x.id])||null;
+const reqChar=(c,p)=>(p&&p.chr&&ctrlChars(c).find(x=>x.id===p.chr))||myChar(c);
+const switcher=(c,ch)=>{const l=ctrlChars(c);return l.length>1?`<div class="row" style="gap:6px;margin-bottom:12px"><span class="lbl">You are playing</span>${l.map(x=>`<button class="chip ${ch&&ch.id===x.id?'on':''}" data-a="pickCtl" data-id="${x.id}">${esc(x.name)}</button>`).join('')}</div>`:'';};
+const myChars=()=>chars.filter(x=>x.owner===S.user.name);
+const clsLine=ch=>`${ch.race} ${ch.cls}${ch.sub?' ('+ch.sub+')':''}`;
+const toast=msg=>{const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(S.toastT);S.toastT=setTimeout(()=>{t.hidden=true;},2800);};
+const val=id=>{const e=document.getElementById(id);return e?e.value.trim():'';};
+const pickVal=id=>{const s=val(id);return s==='__custom'?val(id+'-c'):s;};
+const genCode=n=>{const w=n.replace(/[^A-Za-z]/g,'').toUpperCase().slice(0,5)||'CAMP';return w+'-'+(1000+rnd(8999));};
+const nowT=()=>new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+
+function art(ch,s){
+  const st='--s:'+s+'px';
+  return ch.art?`<img class="art" style="${st}" src="${ch.art}" alt="${esc(ch.name)} artwork">`:`<div class="art" style="${st};--h:${ch.hue}" aria-hidden="true">${esc(initials(ch.name))}</div>`;
+}
+const bar=(cur,max,cls)=>{const pct=max?clamp(Math.round(cur/max*100),0,100):0;return `<div class="${cls?cls+' ':''}bar ${pct<=25?'bad':pct<=50?'warn':''}" role="img" aria-label="${cur} of ${max} hit points"><i style="width:${pct}%"></i></div>`;};
+const empty=m=>`<div class="empty">${m}</div>`;
+const wrap=(t,inner,bg)=>`<div class="modal" ${bg===false?'':'data-a="modalBg"'}><div class="card" role="dialog" aria-modal="true" aria-label="${esc(t)}"><h2>${esc(t)}</h2>${inner}</div></div>`;
+
+function checkBonus(ch,c,label){
+  const ak=ABIL.find(k=>abLabel(k)===label);if(ak)return mod(ch.abil[ak]);
+  const sk=SKILLS.find(x=>x[0]===label);
+  if(sk) return mod(ch.abil[sk[1]])+(ch.skills.includes(label)?prof(P(ch,c.id).level):0);
+  const sv=SAVES.find(x=>x[0]===label);
+  return mod(ch.abil[sv[1]]);
+}
+function rollFor(ch,c,label,mode){mode=mode||'n';const v=Array.from({length:nDice(mode)},()=>rnd(20)),d=pickDie(v,mode),b=checkBonus(ch,c,label);return {d,v,mode,b,t:d+b,ch:ch.name};}
+const resHTML=r=>`<span class="res ${r.d===20?'n20':r.d===1?'n1':''}">${r.t}</span> <span class="muted sm mono">(${rollDetail(r)})</span>${r.phys?' <span class="tag">real die</span>':''}`;
+
+/* dice that tumble through numbers before settling */
+function tumble(id,die,done,n){
+  S.rolling=true;
+  const final=Array.from({length:n||1},()=>rnd(die)),steps=8,reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let i=0;
+  const box=()=>document.getElementById(id);
+  const b=box();if(b)b.classList.add('tumbling');
+  (function tick(){
+    const e=box();
+    if(i>=steps||reduce){if(e)e.classList.remove('tumbling');S.rolling=false;done(final);return;}
+    if(e)e.textContent=rnd(die);
+    i++;setTimeout(tick,18+0.35*i*i);
+  })();
+}
+const pushHist=(d,v,phys,mode)=>{S.hist.unshift({d,v,phys,mode});S.hist=S.hist.slice(0,6);};
+
+/* ---------- views ---------- */
+function authView(){
+  const m=S.authMode;
+  const lab={signin:'Sign in',signup:'Create account',guest:'Guest'};
+  return `<div class="auth"><div class="brand big">${D20}The Chronicle</div>
+  <p class="muted">Character sheets, rolls and initiative for your table, on every device.</p>
+  <div class="seg">${Object.keys(lab).map(k=>`<button class="${m===k?'on':''}" data-a="authMode" data-m="${k}">${lab[k]}</button>`).join('')}</div>
+  <div class="card stack">
+  ${m==='guest'?`<label class="lbl" for="a-name">Display name</label><input id="a-name" data-enter="authGo" placeholder="What should the DM call you?">
+    <p class="muted sm">Guests can join a campaign straight away. Characters you make are held by the DM until you create an account, then the DM can hand them over.</p>`
+  :`${m==='signup'?`<label class="lbl" for="a-name">Display name</label><input id="a-name" placeholder="Mohammed">`:''}
+    <label class="lbl" for="a-email">Email</label><input id="a-email" type="email" placeholder="you@example.com">
+    <label class="lbl" for="a-pass">Password</label><input id="a-pass" type="password" data-enter="authGo">
+    <p class="muted sm">Demo: leave the fields empty to sign in as Mohammed.</p>`}
+  <button class="btn primary" data-a="authGo">${m==='guest'?'Continue as guest':m==='signup'?'Create account':'Sign in'}</button></div></div>`;
+}
+
+function header(){
+  if(S.screen==='campaign'){
+    const c=curCamp(),dm=S.role==='dm',mc=dm?null:myChar(c),sv=mc&&S.saved[c.id+':'+mc.id];
+    return `<header class="bar-top campaign ${dm?'dm':''}"><button class="btn ghost sm" data-a="leave">← Campaigns</button>
+    <div class="ct"><div class="ctitle">${esc(c.name)}</div><div class="muted sm">Session ${c.session} · DM ${esc(c.dm)}${sv?' · Saved '+sv:''}</div></div>
+    <span class="pill ${dm?'ember':'acc'}">${dm?'DM':'Player'}</span>${dm?'':'<button class="btn primary sm" data-a="savePlayer">Save progress</button>'}<button class="btn ghost sm" data-a="switchRole">Switch role</button></header>`;
+  }
+  const nav=(k,l)=>`<button class="nav-b ${S.screen===k||(k==='characters'&&S.screen==='character')?'on':''}" data-a="go" data-s="${k}">${l}</button>`;
+  return `<header class="bar-top"><div class="brand">${D20}The Chronicle</div><nav>${nav('campaigns','Campaigns')}${nav('characters','Characters')}</nav>
+  <button class="chip" data-a="signout" title="Sign out">${esc(S.user.name)}${S.user.guest?' · guest':''} · Sign out</button></header>`;
+}
+
+function campaignsView(){
+  const list=camps.filter(c=>S.filter==='all'||c.status===S.filter);
+  const f=(k,l)=>`<button class="chip ${S.filter===k?'on':''}" data-a="filter" data-f="${k}">${l}</button>`;
+  return `<div class="page-h"><h1>Campaigns</h1><div class="row"><button class="btn" data-a="modal" data-t="joincode">Join with code</button><button class="btn primary" data-a="modal" data-t="newcamp">New campaign</button></div></div>
+  <div class="filters">${f('all','All')}${f('active','Active')}${f('done','Done')}</div>
+  <div class="grid">${list.map(c=>{
+    const mine=c.dm===S.user.name?'You are DM':c.members.some(m=>m.player===S.user.name)?'You play':'';
+    return `<button class="camp ${c.status==='done'?'is-done':''}" data-a="openCamp" data-id="${c.id}">
+    <div class="row between"><span class="pill ${c.status==='done'?'':'acc'}">${c.status==='done'?'Done':'Active'}</span>${mine?`<span class="tag">${mine}</span>`:''}</div>
+    <div class="nm">${esc(c.name)}</div>
+    <div class="meta"><span>Session <b class="mono">#${c.session}</b></span><span>DM <b>${esc(c.dm)}</b></span></div></button>`;}).join('')||empty('No campaigns here yet.')}</div>`;
+}
+
+function charactersView(){
+  const mine=myChars();
+  return `<div class="page-h"><h1>Your characters</h1><button class="btn primary" data-a="modal" data-t="newchar">New character</button></div>
+  ${S.user.guest?`<div class="note ember">You are playing as a guest. Characters you make are held by your DM. Create an account to keep them across campaigns.</div>`:''}
+  <div class="grid">${mine.map(ch=>`<button class="charcard" data-a="openChar" data-id="${ch.id}">${art(ch,72)}<div class="grow"><div class="nm">${esc(ch.name)}</div>
+   <div class="muted sm">${esc(clsLine(ch))}</div><div class="muted sm">Created by ${esc(ch.createdBy)} · ${fmtDate(ch.created)}</div></div></button>`).join('')||empty('No characters yet. Make your first one.')}</div>`;
+}
+
+/* a select with a "Custom" escape hatch, used on the character page (re-renders) */
+function infoPick(ch,label,path,list,withNone){
+  const key=ch.id+path,cur=ch[path]||'',custom=!!S.cust[key]||(!!cur&&!list.includes(cur));
+  return `<div><label class="lbl" for="ip-${path}">${label}</label><select id="ip-${path}" data-c="pickList" data-ch="${ch.id}" data-p="${path}">
+  ${withNone?`<option value="" ${!custom&&!cur?'selected':''}>None yet</option>`:''}${list.map(x=>`<option ${!custom&&x===cur?'selected':''}>${esc(x)}</option>`).join('')}<option value="__custom" ${custom?'selected':''}>Custom…</option></select>
+  ${custom?`<input style="margin-top:6px" placeholder="Type your own" aria-label="Custom ${label.toLowerCase()}" value="${esc(list.includes(cur)?'':cur)}" data-c="set" data-ch="${ch.id}" data-p="${path}">`:''}</div>`;
+}
+/* the same idea inside a modal (no re-render while typing) */
+function pickField(id,label,list,extra,onchange){
+  return `<div class="grow"><label class="lbl" for="${id}">${label}</label><select id="${id}" data-c="${onchange||'custToggle'}" data-t="${id}-c">${extra||''}${list.map(x=>`<option>${esc(x)}</option>`).join('')}<option value="__custom">Custom…</option></select>
+  <input id="${id}-c" hidden placeholder="Type your own" aria-label="Custom ${label.toLowerCase()}" style="margin-top:6px"></div>`;
+}
+const subOpts=cls=>'<option value="">None yet</option>'+(SUBS[cls]||[]).map(x=>`<option>${esc(x)}</option>`).join('')+'<option value="__custom">Custom…</option>';
+
+function characterView(){
+  const ch=ch$(S.charId);if(!ch){S.screen='characters';return charactersView();}
+  const tabs=[['info','Info'],['lore','Lore'],['spells','Spells'],['progress','Progress']];
+  let body='';
+  const f=(l,p,v,t)=>`<label><span class="lbl">${l}</span><input data-c="set" data-ch="${ch.id}" data-p="${p}" ${t==='n'?'type="number" data-num="1"':''} value="${esc(v)}"></label>`;
+  if(S.charTab==='info'){
+    const ab=ABIL.map(k=>`<label><span class="lbl">${k.toUpperCase()} <span class="mono">${sg(mod(ch.abil[k]))}</span></span><input type="number" data-num="1" data-c="set" data-ch="${ch.id}" data-p="abil.${k}" value="${ch.abil[k]}"></label>`).join('');
+    const sk=SKILLS.map(([n,k])=>{const pr=ch.skills.includes(n);return `<div class="sk"><button class="dot ${pr?'on':''}" aria-label="Toggle proficiency in ${n}" data-a="skillTog" data-ch="${ch.id}" data-sk="${n}"></button><span class="sk-n">${n} <em>${k.toUpperCase()}</em></span><span class="mono">${sg(mod(ch.abil[k]))}</span></div>`;}).join('');
+    body=`<div class="card"><div class="editgrid">${f('Name','name',ch.name)}${infoPick(ch,'Race','race',RACES)}${infoPick(ch,'Class','cls',CLASSES)}${infoPick(ch,'Subclass','sub',SUBS[ch.cls]||[],true)}${f('Age','age',ch.age,'n')}${f('Height','height',ch.height)}</div>
+    <p class="muted sm" style="margin-top:12px">Created by ${esc(ch.createdBy)} on ${fmtDate(ch.created)}</p></div>
+    <div class="card sec"><h3>Core stats</h3><p class="muted sm" style="margin-bottom:12px">These follow the character into every campaign. Level, HP, gold and gear are kept per campaign.</p>
+    <div class="editgrid">${ab}${f('Armor class','ac',ch.ac,'n')}${f('Speed (ft)','speed',ch.speed,'n')}</div></div>
+    <div class="card sec"><h3>Skill proficiencies</h3><div class="skills">${sk}</div><p class="muted sm" style="margin-top:10px">Bonuses here are ability modifiers. The proficiency bonus is added in each campaign based on its level.</p></div>
+    <div class="sec"><button class="btn danger" data-a="ask" data-do="delCharDo" data-id="${ch.id}" data-yes="Delete character" data-title="Delete ${esc(ch.name)}?" data-msg="This deletes the character and every campaign's progress for it, and removes it from all parties. This cannot be undone.">Delete character</button></div>`;
+  }
+  if(S.charTab==='lore') body=`<div class="card stack"><label class="lbl" for="lore">Lore and backstory</label><textarea id="lore" data-c="set" data-ch="${ch.id}" data-p="lore">${esc(ch.lore)}</textarea></div>`;
+  if(S.charTab==='spells') body=`<div class="card">${spellList(ch,true)}</div>`;
+  if(S.charTab==='progress'){
+    const ids=Object.keys(ch.prog).filter(i=>camps.some(c=>c.id===i));
+    if(!ids.length) body=empty('This character has not joined a campaign yet.');
+    else{
+      if(!ids.includes(S.charCamp)) S.charCamp=ids[0];
+      const c=camps.find(x=>x.id===S.charCamp),p=P(ch,c.id);
+      const lo=XP[p.level-1],hi=XP[p.level],pct=hi>lo?clamp(Math.round((p.exp-lo)/(hi-lo)*100),0,100):100;
+      const sv=S.saved[c.id+':'+ch.id];
+      body=`<div class="chips" style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap">${ids.map(i=>`<button class="chip ${i===c.id?'on':''}" data-a="charCamp" data-id="${i}">${esc(camps.find(x=>x.id===i).name)}</button>`).join('')}</div>
+      <div class="card stack"><div class="stats"><div class="stat"><div class="v">${p.level}</div><div class="k">Level</div></div><div class="stat"><div class="v">${p.hp}/${p.max}</div><div class="k">HP</div></div><div class="stat"><div class="v">${p.money.gp}</div><div class="k">Gold</div></div></div>
+      <div><div class="row between sm"><span class="muted">EXP</span><span class="mono">${p.exp.toLocaleString()} / ${hi.toLocaleString()}</span></div><div class="bar"><i style="width:${pct}%;background:var(--accent)"></i></div></div>
+      <div><span class="lbl">Equipment</span><div style="margin-top:6px">${p.gear.map(g=>`${esc(g.n)}${g.q>1?' ×'+g.q:''}`).join(' · ')||'<span class="muted">Nothing carried</span>'}</div></div>
+      <div><span class="lbl">Spell slots</span><div style="margin-top:6px">${p.slots.map(s=>`Level ${s.l}: ${s.max-s.used}/${s.max}`).join(' · ')||'<span class="muted">None</span>'}</div></div>
+      <p class="muted sm">Progress is kept per campaign, so using this character elsewhere never mixes it up. ${sv?'Last saved in the campaign at '+sv+'.':'Saving happens inside the campaign.'}</p>
+      <div><button class="btn danger" data-a="ask" data-do="delProgDo" data-id="${ch.id}" data-camp="${c.id}" data-yes="Delete progress" data-title="Delete progress in ${esc(c.name)}?" data-msg="This erases ${esc(ch.name)}'s level, HP, gear and gold for this campaign only, and takes the character out of that party. Other campaigns are not touched.">Delete this progress</button></div></div>`;
+    }
+  }
+  return `<button class="btn ghost sm" data-a="go" data-s="characters">← Characters</button>
+  <div class="hero" style="margin:14px 0">${art(ch,88)}<div class="grow"><div class="nm">${esc(ch.name)}</div><div class="muted">${esc(clsLine(ch))}</div>
+  <label class="btn sm" style="margin-top:8px;display:inline-flex;align-items:center">Upload artwork<input class="vh" type="file" accept="image/*" data-c="art" data-ch="${ch.id}"></label></div></div>
+  <div class="tabs">${tabs.map(t=>`<button class="tab ${S.charTab===t[0]?'on':''}" data-a="charTab" data-t="${t[0]}">${t[1]}</button>`).join('')}</div>${body}`;
+}
+
+function spellList(ch,canEdit,c){
+  const btns=canEdit?`<div class="row"><button class="btn sm primary" data-a="modal" data-t="official" data-ch="${ch.id}">Official list</button><button class="btn sm" data-a="modal" data-t="addspell" data-ch="${ch.id}">Custom</button></div>`:'';
+  const head=`<div class="row between sp-head"><h3>Spells <span class="muted mono" style="font-size:14px">${ch.spells.length}</span></h3>${btns}</div>`;
+  if(!ch.spells.length) return head+empty('No spells yet. Add one from the official list or write your own.');
+  const lvls=[...new Set(ch.spells.map(x=>x.l))].sort((a,b)=>a-b);
+  if(S.spLvF!=='all'&&!lvls.some(l=>String(l)===String(S.spLvF))) S.spLvF='all';
+  const chip=(v,l)=>`<button class="chip ${String(S.spLvF)===String(v)?'on':''}" data-a="spF" data-l="${v}">${l}</button>`;
+  const chips=lvls.length>1?`<div class="row" style="gap:6px;margin-top:10px">${chip('all','All')}${lvls.map(l=>chip(l,l===0?'Cantrips':'L'+l)).join('')}</div>`:'';
+  const shown=lvls.filter(l=>S.spLvF==='all'||String(l)===String(S.spLvF));
+  const row=(x,i)=>{
+    const k=ch.id+'|'+x.n,open=!!S.openSp[k];
+    const cast=c&&x.l>0?`<button class="btn xs primary" data-a="cast" data-ch="${ch.id}" data-camp="${c.id}" data-l="${x.l}">Cast</button>`:'';
+    const rm=canEdit?`<button class="btn xs ghost danger" data-a="delSpell" data-ch="${ch.id}" data-i="${i}">Remove</button>`:'';
+    return `<div class="sp ${open?'open':''}"><button class="sp-h" data-a="spOpen" data-k="${esc(k)}" aria-expanded="${open}"><span class="sp-n">${esc(x.n)}</span><span class="tag">${esc(x.s||'Custom')}</span><span class="chev" aria-hidden="true">▸</span></button>${open?`<div class="sp-b"><p class="muted">${esc(x.t||'No description.')}</p>${cast||rm?`<div class="row">${cast}${rm}</div>`:''}</div>`:''}</div>`;
+  };
+  return head+chips+shown.map(l=>`<div class="sp-grp"><div class="lbl">${l===0?'Cantrips':'Level '+l}</div>${ch.spells.map((x,i)=>x.l===l?row(x,i):'').join('')}</div>`).join('');
+}
+
+function lvlCard(ch,c){
+  const p=P(ch,c.id),lo=XP[p.level-1],hi=XP[p.level],pct=hi>lo?clamp(Math.round((p.exp-lo)/(hi-lo)*100),0,100):100;
+  const at=`data-ch="${ch.id}" data-camp="${c.id}"`;
+  return `<div class="card stack sec"><div class="row between"><div class="row"><span class="lbl">Level</span><button class="btn sm" data-a="lvl" ${at} data-d="-1" aria-label="Lower level">−</button><b class="lvnum mono" aria-live="polite">${p.level}</b><button class="btn sm" data-a="lvl" ${at} data-d="1" aria-label="Raise level">+</button></div>
+  <label class="row"><span class="lbl">EXP</span><input class="in-sm" style="width:96px" type="number" min="0" data-num="1" data-c="set" ${at} data-p="p.exp" value="${p.exp}"><span class="muted sm mono">/ ${p.level>=20?'max':hi.toLocaleString()}</span></label></div>
+  <div class="bar" role="img" aria-label="${pct} percent of the way to the next level"><i style="width:${pct}%;background:var(--accent)"></i></div></div>`;
+}
+function sheet(ch,c,dm){
+  const p=P(ch,c.id),pb=prof(p.level),cid=c.id;
+  const A=(path,v,num)=>`<input class="in-sm" ${num?'type="number" data-num="1"':''} value="${esc(v)}" data-c="set" data-ch="${ch.id}" data-camp="${cid}" data-p="${path}" aria-label="${esc(path)}">`;
+  const rat=`data-ch="${ch.id}" data-camp="${cid}"`;
+  const abil=ABIL.map(k=>`<div class="ab"><div class="ab-l">${ABNAME[k]}</div><button class="ab-m" data-a="skRoll" ${rat} data-key="${abLabel(k)}" aria-label="Roll ${ABNAME[k]} check">${sg(mod(ch.abil[k]))}</button><div class="ab-s">${dm?A('abil.'+k,ch.abil[k],1):ch.abil[k]}</div></div>`).join('');
+  const skills=SKILLS.map(([n,k])=>{const pr=ch.skills.includes(n);
+    return `<div class="sk">${dm?`<button class="dot ${pr?'on':''}" aria-label="Toggle proficiency in ${n}" data-a="skillTog" data-ch="${ch.id}" data-sk="${n}"></button>`:`<span class="dot ${pr?'on':''}"></span>`}<button class="sk-roll" data-a="skRoll" ${rat} data-key="${n}" aria-label="Roll ${n}"><span class="sk-n">${n} <em>${k.toUpperCase()}</em></span><span class="mono">${sg(mod(ch.abil[k])+(pr?pb:0))}</span></button></div>`;}).join('');
+  const modebar=`<div class="modebar"><span class="muted sm">Tap an ability or skill to roll it:</span>${[['n','Normal'],['a','Advantage'],['d','Disadvantage']].map(([k,l])=>`<button class="chip ${S.mode===k?'on':''}" data-a="modeSet" data-m="${k}">${l}</button>`).join('')}</div>`;
+  const hpb=d=>`<button class="btn sm" data-a="hp" data-ch="${ch.id}" data-camp="${cid}" data-d="${d}">${d>0?'+':'−'}${Math.abs(d)}</button>`;
+  const edit=dm?`<div class="sec"><h3>DM controls</h3><div class="card"><div class="editgrid">
+    <label><span class="lbl">Name</span><input data-c="set" data-ch="${ch.id}" data-p="name" value="${esc(ch.name)}"></label>
+    <label><span class="lbl">Race</span><input data-c="set" data-ch="${ch.id}" data-p="race" value="${esc(ch.race)}"></label>
+    <label><span class="lbl">Class</span><input data-c="set" data-ch="${ch.id}" data-p="cls" value="${esc(ch.cls)}"></label>
+    <label><span class="lbl">Subclass</span><input data-c="set" data-ch="${ch.id}" data-p="sub" value="${esc(ch.sub||'')}"></label>
+    <label><span class="lbl">Max HP</span>${A('p.max',p.max,1)}</label>
+    <label><span class="lbl">AC</span>${A('ac',ch.ac,1)}</label>
+    <label><span class="lbl">Speed</span>${A('speed',ch.speed,1)}</label></div>
+    <p class="muted sm" style="margin-top:10px">You can change anything on this sheet. Ability scores and skill dots are editable above.</p></div></div>`:'';
+  return `<div class="hero">${art(ch,76)}<div class="grow"><div class="nm">${esc(ch.name)}</div><div class="muted">${esc(clsLine(ch))} · Level ${p.level}</div></div></div>
+  ${lvlCard(ch,c)}
+  <div class="card stack sec"><div class="hp-row"><span class="hp-num">${p.hp} / ${p.max}</span>${hpb(-5)}${hpb(-1)}${hpb(1)}${hpb(5)}</div>${bar(p.hp,p.max)}</div>
+  <div class="stats sec"><div class="stat"><div class="v">${ch.ac}</div><div class="k">Armor</div></div><div class="stat"><div class="v">${ch.speed}</div><div class="k">Speed ft</div></div><div class="stat"><div class="v">${sg(mod(ch.abil.dex))}</div><div class="k">Initiative</div></div><div class="stat"><div class="v">${sg(pb)}</div><div class="k">Proficiency</div></div></div>
+  <div class="sec"><h3>Abilities</h3>${modebar}<div class="abils">${abil}</div></div>
+  <div class="sec"><h3>Skills</h3><div class="card"><div class="skills">${skills}</div></div></div>${edit}`;
+}
+
+function tray(){
+  const dice=[4,6,8,10,12,20,100],L=S.last;
+  const det=L?`d${L.d}${L.phys?' real':''}${L.mode&&L.mode!=='n'?' '+MODE[L.mode].toLowerCase():''} · ${L.v.join(' / ')}${L.mod?' '+sg(L.mod):''}`:'';
+  return `<div class="card stack"><div class="row between"><div class="dice">${dice.map(d=>`<button class="chip die-c ${S.die===d?'on':''}" data-a="dieSel" data-d="${d}">d${d}</button>`).join('')}</div>
+  <div><div class="last ${L&&L.d===20&&L.k===20?'res n20':''}" id="tray-num" aria-live="polite">${L?L.t:'—'}</div><span class="muted sm mono" id="tray-det">${det}</span></div></div>
+  <div class="row"><span class="lbl">Modifier</span><button class="btn xs" data-a="modD" data-d="-1" aria-label="Lower modifier">−</button><b class="mono modv">${sg(S.mod)}</b><button class="btn xs" data-a="modD" data-d="1" aria-label="Raise modifier">+</button><button class="btn xs ghost" data-a="modD" data-d="0">Reset</button></div>
+  <div class="row"><button class="btn primary grow" data-a="roll" data-m="n">Roll d${S.die}</button><button class="btn grow" data-a="roll" data-m="a">Advantage</button><button class="btn grow" data-a="roll" data-m="d">Disadvantage</button></div>
+  <div class="divider">or log a real roll</div>
+  <div class="row"><select id="phys-d" style="width:auto" aria-label="Die type">${dice.map(d=>`<option value="${d}" ${d===20?'selected':''}>d${d}</option>`).join('')}</select><input id="phys-v" class="in-sm" type="number" min="1" placeholder="Result" data-enter="physLog" aria-label="Result on the die"><button class="btn sm" data-a="physLog">Log my roll</button></div>
+  ${S.hist.length?`<div class="hist"><span>Recent</span>${S.hist.map(h=>`<span>${h.t!=null?h.t:h.v} (d${h.d}${h.mode&&h.mode!=='n'?(h.mode==='a'?' adv':' dis'):''}${h.phys?' real':''})</span>`).join('')}</div>`:''}</div>`;
+}
+
+function slotCard(ch,c){
+  const p=P(ch,c.id),ed=S.slotEdit,at=`data-ch="${ch.id}" data-camp="${c.id}"`;
+  const tiles=p.slots.map((x,i)=>`<div class="slot"><div class="row between"><span class="lbl">Level ${x.l}</span><span class="mono sm">${x.max-x.used}/${x.max}</span></div>
+   <div class="pips">${Array.from({length:x.max},(_,k)=>`<button class="pip ${k+1<=x.used?'spent':''}" data-a="slot" ${at} data-i="${i}" data-k="${k+1}" aria-label="Level ${x.l} slot ${k+1}, ${k+1<=x.used?'spent':'available'}"></button>`).join('')}</div>
+   ${ed?`<div class="row between"><span class="row" style="gap:6px"><button class="btn xs" data-a="slotMax" ${at} data-i="${i}" data-d="-1" aria-label="Fewer level ${x.l} slots">−</button><button class="btn xs" data-a="slotMax" ${at} data-i="${i}" data-d="1" aria-label="More level ${x.l} slots">+</button></span><button class="btn xs ghost danger" data-a="slotDel" ${at} data-i="${i}">Remove</button></div>`:''}</div>`).join('');
+  const add=ed?`<div class="row" style="margin-top:14px"><label class="lbl" for="sl-l">Add level</label><select id="sl-l" style="width:auto">${[1,2,3,4,5,6,7,8,9].map(l=>`<option value="${l}">${l}</option>`).join('')}</select><button class="btn sm primary" data-a="slotAdd" ${at}>Add</button></div>`:'';
+  return `<div class="card"><div class="row between"><h3>Spell slots</h3><div class="row">${p.slots.length?`<button class="btn sm" data-a="slotRest" ${at}>Long rest</button>`:''}<button class="btn sm ${ed?'primary':''}" data-a="slotEditTog">${ed?'Done':'Edit'}</button></div></div>
+  ${p.slots.length?`<div class="slots">${tiles}</div>`:'<p class="muted" style="margin-top:10px">No slots yet. Tap Edit to add some.</p>'}${add}</div>`;
+}
+
+function gearView(ch,c){
+  const p=P(ch,c.id);
+  const coin=k=>`<div class="coin"><span class="k">${k.toUpperCase()}</span><input type="number" data-num="1" data-c="coin" data-ch="${ch.id}" data-camp="${c.id}" data-k="${k}" value="${p.money[k]}" aria-label="${k}"><div class="row"><button class="btn xs" data-a="coinD" data-ch="${ch.id}" data-camp="${c.id}" data-k="${k}" data-d="-1">−1</button><button class="btn xs" data-a="coinD" data-ch="${ch.id}" data-camp="${c.id}" data-k="${k}" data-d="1">+1</button></div></div>`;
+  return `<div class="card"><h3 style="margin-bottom:6px">Equipment</h3>${p.gear.map((g,i)=>`<div class="gear"><input type="checkbox" style="width:22px;min-height:22px" ${g.eq?'checked':''} data-c="gearEq" data-ch="${ch.id}" data-camp="${c.id}" data-i="${i}" aria-label="Equipped: ${esc(g.n)}"><button class="gear-n" data-a="gearOpen" data-ch="${ch.id}" data-camp="${c.id}" data-i="${i}">${esc(g.n)}</button>${g.eq?'<span class="tag">equipped</span>':''}
+    <button class="btn xs" data-a="gearQ" data-ch="${ch.id}" data-camp="${c.id}" data-i="${i}" data-d="-1" aria-label="Fewer">−</button><span class="mono" style="min-width:24px;text-align:center">${g.q}</span><button class="btn xs" data-a="gearQ" data-ch="${ch.id}" data-camp="${c.id}" data-i="${i}" data-d="1" aria-label="More">+</button>
+    <button class="btn xs ghost danger" data-a="gearDel" data-ch="${ch.id}" data-camp="${c.id}" data-i="${i}" aria-label="Remove ${esc(g.n)}">✕</button></div>`).join('')||'<p class="muted">Nothing carried yet.</p>'}
+    <div class="row" style="margin-top:12px"><input id="g-name" class="grow" list="item-list" placeholder="Add an item" data-enter="gearAdd"><datalist id="item-list">${ITEMS.map(x=>`<option value="${esc(x[0])}">`).join('')}</datalist><button class="btn primary" data-a="gearAdd" data-ch="${ch.id}" data-camp="${c.id}">Add</button></div></div>
+    <div class="card sec"><h3 style="margin-bottom:10px">Money</h3><div class="coins">${coin('gp')}${coin('sp')}${coin('cp')}</div></div>`;
+}
+
+const sorted=c=>[...c.init.list].sort((a,b)=>(a.pend?-99:a.init)>(b.pend?-99:b.init)?-1:1);
+const cName=x=>x.charId?ch$(x.charId).name:x.name;
+function turnOrder(c){
+  const list=sorted(c);
+  if(!list.length) return empty('No fight is running right now.');
+  const cur=c.init.turn%list.length;
+  return `<div class="row between" style="margin-bottom:8px"><span class="lbl">Round <span class="mono">${c.init.round}</span></span></div>`+list.map((x,i)=>{
+    const ch=x.charId?ch$(x.charId):null,p=ch?P(ch,c.id):null;
+    return `<div class="crow ${i===cur?'turn pl':''}"><div class="row"><span class="ivs">${x.pend?'–':x.init}</span><div class="grow"><b>${esc(cName(x))}</b> ${i===cur?'<span class="tag">· taking their turn</span>':''}</div>${x.kind!=='pc'?'<span class="tag">Enemy</span>':''}</div>${p?bar(p.hp,p.max):''}</div>`;}).join('');
+}
+
+function partyPlayer(c,me){
+  const others=c.members.filter(m=>!me||m.charId!==me.id).map(m=>ch$(m.charId));
+  const npcs=c.npcs.filter(n=>n.vis),mine=c.npcs.filter(n=>(n.ctl||[]).includes(S.user.name));
+  return `${mine.length?`<div class="sec" style="margin-top:0"><h3>NPCs you play</h3><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr));margin-top:10px">${mine.map(n=>`<button class="tile" data-a="npcView" data-id="${n.id}">${bigArt(n.art,n.name).replace('bigart','bigart')}<b>${esc(n.name)}</b><span class="muted sm">${esc(n.note||'')}</span></button>`).join('')}</div></div>`:''}<h3>Your party</h3><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr));margin-top:10px">${others.map(ch=>`<div class="tile">${art(ch,84)}<b>${esc(ch.name)}</b></div>`).join('')||empty('Just you so far.')}</div>
+  ${npcs.length?`<div class="sec"><h3>People you know</h3><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${npcs.map(n=>`<div class="tile"><div class="art" style="--s:84px;--h:${(n.name.length*37)%360}">${esc(initials(n.name))}</div><b>${esc(n.name)}</b><span class="muted sm">${esc(n.note)}</span></div>`).join('')}</div></div>`:''}`;
+}
+
+function playerBody(c){
+  const ch=myChar(c);
+  if(S.tab==='party') return partyPlayer(c,ch);
+  if(S.tab==='log') return logView(c,false);
+  if(S.tab==='enc'){
+    if(!c.init.active)return empty('No Encounter right now. The DM will start one when it is time.');
+    if(initChar(c))return `<div class="req"><div><b>Roll for initiative</b> to see the encounter.</div><button class="btn ember" data-a="initOpen">Roll for Initiative</button></div>`;
+    const list=sorted(c),cur=list.length?list[c.init.turn%list.length]:null,mine=cur&&ch&&cur.charId===ch.id;
+    return `${mine?'<div class="req"><b>It is your turn.</b></div>':''}${turnOrder(c)}`;
+  }
+  if(!ch) return empty('The DM is holding your character right now.');
+  const borrowed=ownerOf(c,ch.id)!==S.user.name;
+  const note=borrowed?`<div class="note ember">You are controlling <b>${esc(ch.name)}</b> for now. The DM can end this at any time, and it does not change who owns the character.</div>`:'';
+  if(S.tab==='sheet') return `${note}${switcher(c,ch)}<div class="row between" style="margin-bottom:12px"><span class="muted sm">Playing ${esc(ch.name)}</span><button class="btn sm" data-a="switchChar">Switch or create character</button></div>${tray()}<div style="margin-top:6px">${sheet(ch,c,false)}</div>`;
+  if(S.tab==='spells') return `${note}${switcher(c,ch)}${slotCard(ch,c)}<div class="card sec">${spellList(ch,true,c)}</div>`;
+  if(S.tab==='gear') return `${note}${switcher(c,ch)}${gearView(ch,c)}`;
+  return '';
+}
+
+/* DM body */
+function dmBody(c){
+  switch(S.tab){
+    case 'party': return dmParty(c);
+    case 'init': return dmInit(c);
+    case 'rolls': return dmRolls(c);
+    case 'log': return dmLog(c);
+    case 'res': return dmRes(c);
+    case 'settings': return dmSettings(c);
+  }
+  return '';
+}
+function dmParty(c){
+  if(S.openSheet){
+    const ch=ch$(S.openSheet);
+    if(ch&&c.members.some(m=>m.charId===ch.id)){
+      return `<button class="btn ghost sm" data-a="closeSheet">← Party</button><div style="margin-top:12px">${sheet(ch,c,true)}<div class="sec">${slotCard(ch,c)}</div><div class="sec card">${spellList(ch,true,c)}</div><div class="sec"><h3>Gear and gold</h3>${gearView(ch,c)}</div></div>`;
+    }
+    S.openSheet=null;
+  }
+  const swapped=Object.keys(c.ctrl).length;
+  const held=c.members.filter(m=>{const ch=ch$(m.charId);return ch&&ch.owner===null;});
+  return `${swapped?`<div class="note ember row between"><span>Some characters are being played by someone else this session. Owners never change.</span><button class="btn sm" data-a="endSwaps">Return all to owners</button></div>`:''}<div class="grid">${c.members.map(m=>{const ch=ch$(m.charId),p=P(ch,c.id);
+    const ctl=controller(c,ch.id),b=ctl!==m.player,players=c.members.map(x=>x.player);
+    return `<div class="charcard" style="flex-direction:column;align-items:stretch;gap:8px"><button class="resrow" data-a="openSheet" data-id="${ch.id}" style="flex-direction:column;align-items:stretch;gap:8px"><span class="row" style="flex-wrap:nowrap">${art(ch,56)}<span class="grow"><span class="nm" style="display:block">${esc(ch.name)}</span><span class="muted sm">Owned by ${esc(m.player)} · L${p.level} ${esc(ch.cls)}</span></span></span>${bar(p.hp,p.max)}</button>
+    <div class="row between"><span class="muted sm mono">${p.hp}/${p.max} HP · AC ${ch.ac}</span><span class="row" style="gap:6px"><label class="lbl" for="sw-${ch.id}">Played by</label><select id="sw-${ch.id}" style="width:auto;max-width:140px" data-c="ctrl" data-id="${ch.id}">${players.map(p2=>`<option ${p2===ctl?'selected':''}>${esc(p2)}</option>`).join('')}</select>${b?'<span class="pill ember">borrowed</span>':''}</span></div></div>`;}).join('')||empty('No players have joined yet. Share the code in Settings.')}</div>
+  ${held.length?`<div class="sec"><h3>Held by you (guest characters)</h3>${held.map(m=>{const ch=ch$(m.charId);return `<div class="card row" style="margin-bottom:8px">${art(ch,48)}<div class="grow"><b>${esc(ch.name)}</b><div class="muted sm">Made by ${esc(ch.createdBy)}</div></div><input id="claim-${ch.id}" style="max-width:180px" placeholder="Account name" data-enter="claim" aria-label="Account name to hand ${esc(ch.name)} to"><button class="btn sm primary" data-a="claim" data-id="${ch.id}">Hand over</button></div>`;}).join('')}<p class="muted sm">Hand a character to a player's account once they sign up. Their progress comes with it.</p></div>`:''}`;
+}
+function dmInit(c){
+  const I=c.init,list=sorted(c),cur=list.length?I.turn%list.length:0;
+  return `<div class="row between" style="margin-bottom:12px"><div class="row"><span class="lbl">Round</span><span class="mono" style="font-size:24px;font-weight:600">${I.round}</span></div>
+  <div class="row"><button class="btn sm" data-a="rollAll">Roll for everyone</button><button class="btn sm" data-a="modal" data-t="addcomb">Add</button>${I.active?`<button class="btn ember" data-a="nextTurn" ${list.length?'':'disabled'}>Next turn</button>`:''}</div></div>
+  ${I.active?`<div class="note ember row between"><span>Encounter running. ${c.members.filter(m=>I.rolled[m.charId]).length}/${c.members.length} players have rolled initiative.</span><button class="btn danger sm" data-a="ask" data-do="endEnc" data-yes="End encounter" data-title="End the encounter?" data-msg="Combatants are cleared and players go back to a quiet Encounter tab.">End encounter</button></div>`:`<div class="note row between"><span>No encounter is running. Players see "No Encounter" until you start one.</span><button class="btn ember" data-a="startEnc">Start encounter</button></div>`}
+  ${list.map((x,i)=>{
+    const ch=x.charId?ch$(x.charId):null,p=ch?P(ch,c.id):x;
+    const hb=d=>`<button class="btn xs" data-a="combHp" data-id="${x.id}" data-d="${d}">${d>0?'+':'−'}${Math.abs(d)}</button>`;
+    return `<div class="crow ${i===cur?'turn':''}"><div class="row"><input class="iv" type="number" data-num="1" data-c="initval" data-id="${x.id}" value="${x.pend?'':x.init}" aria-label="Initiative for ${esc(cName(x))}"><div class="grow">${x.mid&&c.mons.some(m=>m.id===x.mid)?`<button class="linkb" data-a="resOpen" data-cat="mons" data-id="${x.mid}">${esc(cName(x))}</button>`:`<b>${esc(cName(x))}</b>`} <span class="tag">${x.kind==='pc'?'Player':x.kind==='npc'?'NPC':'Monster'}</span></div>${x.pend?'<span class="tag">waiting for roll</span>':''}${I.active&&i===cur?'<span class="pill ember">Turn</span>':''}<button class="btn xs ghost danger" data-a="delComb" data-id="${x.id}" aria-label="Remove ${esc(cName(x))}">✕</button></div>
+    <div class="row">${bar(p.hp,p.max,'grow')}<span class="mono sm" style="min-width:62px;text-align:right">${p.hp}/${p.max}</span>${hb(-5)}${hb(-1)}${hb(1)}${hb(5)}</div></div>`;}).join('')||empty('Nobody in the fight yet. Add combatants or roll for the party.')}`;
+}
+function dmRolls(c){
+  const players=c.members.map(m=>m.player);
+  const kinds=[['skill','Skill'],['ability','Ability'],['save','Saving throw']];
+  const opts=S.rollKind==='skill'?SKILLS.map(x=>x[0]):S.rollKind==='ability'?ABIL.map(abLabel):SAVES.map(x=>x[0]);
+  if(!opts.includes(S.rollCheck))S.rollCheck=opts[0];
+  const who=['<option value="__all">Everyone</option>'].concat(c.members.map(m=>{const ch=ch$(m.charId);return `<option value="${m.charId}" ${S.rollWho===m.charId?'selected':''}>${esc(ch.name)} (${esc(controller(c,m.charId))})</option>`;})).join('');
+  return `<div class="card stack"><h3>Ask for a roll</h3>
+  <span class="lbl">Type</span><div class="chips ember row" style="gap:6px">${kinds.map(([k,l])=>`<button class="chip ${S.rollKind===k?'on':''}" data-a="rollKind" data-k="${k}">${l}</button>`).join('')}</div>
+  <label class="lbl" for="r-check">${S.rollKind==='skill'?'Skill':S.rollKind==='save'?'Saving throw':'Ability check'}</label><select id="r-check" data-c="rollCheck">${opts.map(x=>`<option ${S.rollCheck===x?'selected':''}>${x}</option>`).join('')}</select>
+  <label class="lbl" for="r-who">Who rolls</label><select id="r-who" data-c="rollWho">${who.replace('<option value="__all">',`<option value="__all" ${S.rollWho==='__all'?'selected':''}>`)}</select>
+  <span class="lbl">Roll type</span><div class="chips ember row" style="gap:6px">${[['n','Normal'],['a','Advantage'],['d','Disadvantage']].map(([k,l])=>`<button class="chip ${S.rollMode===k?'on':''}" data-a="rollModeSet" data-m="${k}">${l}</button>`).join('')}</div>
+  <button class="btn ember" data-a="sendRoll" ${players.length?'':'disabled'}>Send request</button>
+  <p class="muted sm">Players get a prompt on their own devices and can roll virtual dice or enter a real one. In this prototype they answer by themselves a few seconds later.</p></div>
+  <div class="sec"><h3>Results</h3>${[...c.prompts].reverse().map(p=>`<div class="roll"><div class="row between"><b>${esc(p.label)} ${modeTag(p.mode)}</b><span class="tag">${Object.keys(p.res).length}/${p.targets.length} in</span></div>
+   ${p.targets.map(t=>`<div class="row between" style="padding:4px 0;border-top:1px solid var(--line);margin-top:6px"><span>${esc(t)} ${p.res[t]?`<span class="muted sm">· ${esc(p.res[t].ch)}</span>`:''}</span>${p.res[t]?`<span>${resHTML(p.res[t])}</span>`:'<span class="muted sm">waiting…</span>'}</div>`).join('')}</div>`).join('')||empty('No roll requests yet.')}</div>
+  <div class="sec"><h3>Your dice</h3>${tray()}</div>`;
+}
+function dmSettings(c){
+  return `<div class="card stack"><h3>Campaign</h3>
+  <div class="row between"><span class="lbl">Join code</span><span class="row"><b class="mono" style="font-size:20px">${esc(c.code)}</b><button class="btn xs" data-a="copyCode">Copy</button></span></div>
+  <div class="row between"><span class="lbl">Session</span><span class="row"><button class="btn xs" data-a="sess" data-d="-1" aria-label="Previous session number">−</button><b class="mono" style="font-size:20px">#${c.session}</b><button class="btn xs" data-a="sess" data-d="1" aria-label="Next session number">+</button></span></div>
+  <div class="row between"><span class="lbl">Status</span><button class="btn sm" data-a="toggleDone">${c.status==='done'?'Reopen campaign':'Mark as done'}</button></div></div>
+  <div class="card stack sec"><h3>Change DM password</h3><label class="lbl" for="np">New password</label><input id="np" type="password"><label class="lbl" for="ne">Backup email</label><input id="ne" type="email" placeholder="you@example.com" data-enter="setPw">
+  <p class="muted sm">A reset link goes to this email, so you never lose access to your campaign. The password itself is stored scrambled, never in plain text.</p><button class="btn ember" data-a="setPw">Save password</button></div>
+  <div class="card stack sec"><h3>Delete campaign</h3><p class="muted sm">Removes the campaign, its encounter, NPCs and every character's progress in it. Characters themselves stay with their owners.</p>
+  <div><button class="btn danger" data-a="ask" data-do="delCampDo" data-id="${c.id}" data-yes="Delete campaign" data-title="Delete ${esc(c.name)}?" data-msg="Everyone loses access and the campaign's progress is erased. This cannot be undone.">Delete campaign</button></div></div>`;
+}
+
+/* ---------- round 4: roll helpers, resources, pop-ups ---------- */
+const MODE={n:'',a:'Advantage',d:'Disadvantage'};
+const pickDie=(v,m)=>m==='a'?Math.max(...v):m==='d'?Math.min(...v):v[0];
+const nDice=m=>m==='a'||m==='d'?2:1;
+const modeTag=m=>m&&m!=='n'?`<span class="tag ${m==='a'?'adv':'dis'}">${MODE[m]}</span>`:'';
+const hueOf=s=>String(s).split('').reduce((a,c)=>a+c.charCodeAt(0)*7,0)%360;
+const MCAT=[['mons','Monsters'],['npcs','NPCs'],['items','Items'],['maps','Maps & pictures']];
+const newId=p=>p+Date.now()+rnd(9999);
+const thumb=r=>r.art?`<img class="thumb" src="${r.art}" alt="">`:`<div class="thumb" style="--h:${hueOf(r.name)}" aria-hidden="true">${esc(initials(r.name))}</div>`;
+const bigArt=(src,name)=>src?`<img class="bigart" src="${src}" alt="${esc(name)} picture">`:`<div class="bigart ph" style="--h:${hueOf(name)}" aria-hidden="true">${esc(initials(name))}</div>`;
+const itemInfo=g=>{const cat=ITEMS.find(x=>x[0].toLowerCase()===g.n.toLowerCase());return {d:g.d!=null?g.d:(cat?cat[2]:''),type:g.type||(cat?cat[1]:'Item')};};
+const speedTxt=s=>typeof s==='number'?s+' ft.':s;
+const resSub=(cat,r)=>cat==='mons'?`CR ${r.cr} · ${r.type} · AC ${r.ac} · HP ${r.hp}`:cat==='npcs'?`${r.note||'NPC'} · ${r.vis?'visible to players':'hidden from players'}`:cat==='items'?(r.type||'Item'):(r.d||'');
+const rollDetail=r=>`${r.v&&r.v.length>1?r.v.join(' / ')+' '+(r.mode==='a'?'(advantage)':'(disadvantage)'):r.d} ${r.b<0?'−':'+'} ${Math.abs(r.b)}`;
+const addMon=(c,r)=>{
+  let ex=c.mons.find(x=>x.off&&x.name===r.name);if(ex)return ex;
+  ex={...r,abil:{...r.abil},id:newId('m'),off:1,art:null};c.mons.push(ex);return ex;
+};
+const logAdd=(c,kind,text,vis)=>{if(!c)return;c.log.unshift({id:newId('l'),t:nowT(),kind,text,vis:vis!==false});c.log=c.log.slice(0,200);};
+const logRoll=(c,text)=>logAdd(c,'roll',text,S.role!=='dm');
+function fixCamp(c){
+  c.log=c.log||[];c.init.active=!!c.init.active;c.init.rolled=c.init.rolled||{};c.init.n=c.init.n||0;
+  if(!c.logSeed&&c.init.list.length){c.logSeed=1;c.init.active=true;c.members.forEach(m=>{c.init.rolled[m.charId]=true;});}
+  c.mons=c.mons||[];c.items=c.items||[];c.maps=c.maps||[];c.shows=c.shows||[];
+  if(c.id==='crown'&&!c.seeded){
+    c.seeded=1;
+    addMon(c,MONSTERS.find(x=>x.name==='Goblin'));addMon(c,MONSTERS.find(x=>x.name==='Owlbear'));
+    c.items.push({id:'t1',name:'Potion of healing',type:'Potion',d:ITEMS.find(x=>x[0]==='Potion of healing')[2],art:null,off:1},{id:'t2',name:'Sealed letter',type:'Quest item',d:'Wax-sealed with a crow. It is addressed to someone who has been dead for ten years.',art:null});
+    c.maps.push({id:'p1',name:'Region map',d:MAPS_OFF[2][1],art:mapSvg('region'),off:1});
+  }
+}
+
+function monHTML(r){
+  return `<div class="muted">${esc(r.type)}</div>
+  <div class="stats"><div class="stat"><div class="v">${r.ac}</div><div class="k">Armor</div></div><div class="stat"><div class="v">${r.hp}</div><div class="k">Hit points</div></div><div class="stat"><div class="v" style="font-size:15px">${esc(speedTxt(r.speed))}</div><div class="k">Speed</div></div><div class="stat"><div class="v">${esc(r.cr)}</div><div class="k">Challenge</div></div></div>
+  <div class="abils mini">${ABIL.map(k=>`<div class="ab"><div class="ab-l">${k.toUpperCase()}</div><div class="ab-m">${sg(mod(r.abil[k]))}</div><div class="ab-s">${r.abil[k]}</div></div>`).join('')}</div>
+  <div class="desc" style="margin-top:8px">${esc(r.d||'')}</div>`;
+}
+
+function dmRes(c){
+  const cat=S.resCat,list=c[cat],label=MCAT.find(x=>x[0]===cat)[1];
+  return `<div class="row" style="gap:6px;margin-bottom:12px">${MCAT.map(([k,l])=>`<button class="chip ${cat===k?'on':''}" data-a="resCat" data-k="${k}">${l} <span class="muted">${c[k].length}</span></button>`).join('')}</div>
+  <div class="row between" style="margin-bottom:12px"><h2>${label}</h2><div class="row"><button class="btn sm" data-a="modal" data-t="offres" data-cat="${cat}">Add official</button><button class="btn ember sm" data-a="modal" data-t="addres" data-cat="${cat}">Custom</button></div></div>
+  ${list.map(r=>`<div class="card row" style="margin-bottom:8px;flex-wrap:nowrap"><button class="resrow" data-a="resOpen" data-cat="${cat}" data-id="${r.id}">${thumb(r)}<span class="grow"><b>${esc(r.name)}</b><span class="muted sm clamp1">${esc(resSub(cat,r))}</span></span></button><button class="btn xs ghost danger" data-a="ask" data-do="resDel" data-id="${cat}:${r.id}" data-yes="Remove" data-title="Remove ${esc(r.name)}?" data-msg="It is taken out of your resources. Items already given to players stay with them." aria-label="Remove ${esc(r.name)}">✕</button></div>`).join('')||empty('Nothing here yet. Add something official, or make your own.')}
+  <p class="muted sm" style="margin-top:12px">Tap anything to open it. Items can be given to a player, pictures can be shown to one player or everyone, and monsters can be dropped straight into the encounter.</p>`;
+}
+
+const resRec=(m,c)=>m.off?MONSTERS.find(x=>x.name===m.id):c[m.cat].find(x=>x.id===m.id);
+function resModal(m,c){
+  const r=resRec(m,c);if(!r)return '';
+  const cat=m.cat,players=c.members.map(x=>x.player);
+  let body=bigArt(r.art,r.name);
+  if(cat==='mons')body+=monHTML(r);
+  else if(cat==='items')body+=`<div><span class="tag">${esc(r.type||'Item')}</span></div><div class="desc">${esc(r.d||'No description yet.')}</div>`;
+  else if(cat==='npcs')body+=`<div class="muted">${esc(r.note||'')}</div><div class="desc">${esc(r.d||'')}</div><label class="row"><input type="checkbox" style="width:22px;min-height:22px" ${r.vis?'checked':''} data-c="npcVis" data-id="${r.id}">Visible to players in their Party tab</label>
+   <div><span class="lbl">Played by (optional)</span><div class="chips ember row" style="gap:6px;margin-top:6px">${players.map(p=>`<button class="chip ${(r.ctl||[]).includes(p)?'on':''}" data-a="npcCtl" data-id="${r.id}" data-p="${esc(p)}">${esc(p)}</button>`).join('')||'<span class="muted sm">No players yet.</span>'}</div><span class="muted sm">A player who gets an NPC sees it in their Party tab.</span></div>`;
+  else body+=`<div class="desc">${esc(r.d||'')}</div>`;
+  const opts=players.map(p=>`<option>${esc(p)}</option>`).join('');
+  let act='';
+  if(cat==='mons')act+=`<button class="btn ember" data-a="resEnc">Add to encounter</button>`;
+  if(m.off)act+=`<button class="btn" data-a="resKeep">Add to my resources</button><button class="btn ghost" data-a="resBack">← Back to the list</button>`;
+  else{
+    if(cat==='items')act+=players.length?`<div class="row"><select id="res-pl" class="grow" aria-label="Give to">${opts}</select><button class="btn primary" data-a="resGive">Give item</button></div>`:'<p class="muted sm">No players in the campaign yet, so there is nobody to give this to.</p>';
+    act+=`<div class="row"><select id="res-to" class="grow" aria-label="Show picture to"><option value="__all">All players</option>${opts}</select><button class="btn ember" data-a="resShow" ${r.art?'':'disabled'}>Show picture</button></div>${r.art?'':'<span class="muted sm">Add a picture first, then you can show it.</span>'}
+    <div class="row"><label class="btn sm" style="display:inline-flex;align-items:center">${r.art?'Change picture':'Add picture'}<input class="vh" type="file" accept="image/*" data-c="resArt"></label><button class="btn ghost" data-a="closeModal">Close</button></div>`;
+  }
+  return wrap(r.name,`${body}<div class="stack" style="margin-top:6px">${act}</div>`);
+}
+
+function offModal(m,c){
+  const cat=m.cat,q=(m.q||'').toLowerCase(),label=MCAT.find(x=>x[0]===cat)[1];
+  const hit=n=>!q||n.toLowerCase().includes(q);
+  let rows=[];
+  if(cat==='mons')rows=MONSTERS.filter(x=>hit(x.name)).map(x=>({n:x.name,sub:`CR ${x.cr} · ${x.type} · AC ${x.ac} · HP ${x.hp}`,have:c.mons.some(y=>y.name===x.name),view:1}));
+  else if(cat==='items')rows=ITEMS.filter(x=>hit(x[0])).map(x=>({n:x[0],sub:x[1],desc:x[2],have:c.items.some(y=>y.name===x[0])}));
+  else if(cat==='npcs')rows=NPC_OFF.filter(x=>hit(x[0])).map(x=>({n:x[0],sub:x[1],desc:x[2],have:c.npcs.some(y=>y.name===x[0])}));
+  else rows=MAPS_OFF.filter(x=>hit(x[0])).map(x=>({n:x[0],sub:x[1],have:c.maps.some(y=>y.name===x[0])}));
+  return wrap('Official: '+label,`<input id="m-q" type="search" placeholder="Search by name" value="${esc(m.q||'')}" data-c="spellQ" aria-label="Search">
+  <span class="muted sm">${rows.length} shown. This is a starter set; you can always make your own.</span>
+  <div>${rows.map(r=>`<div class="spell"><div class="row between" style="flex-wrap:nowrap">${r.view?`<button class="linkb" data-a="resPrev" data-id="${esc(r.n)}">${esc(r.n)}</button>`:`<b>${esc(r.n)}</b>`}${r.have?'<span class="tag">Added</span>':`<button class="btn xs primary" data-a="offAdd" data-cat="${cat}" data-n="${esc(r.n)}">Add</button>`}</div><div class="muted sm">${esc(r.sub)}</div>${r.desc?`<div class="sm">${esc(r.desc)}</div>`:''}</div>`).join('')||empty('No matches.')}</div>
+  <button class="btn" data-a="closeModal">Done</button>`);
+}
+
+function addResModal(m){
+  const cat=m.cat,L={mons:'monster',npcs:'NPC',items:'item',maps:'map or picture'}[cat];
+  const f=(id,l,ex)=>`<div class="grow"><label class="lbl" for="${id}">${l}</label><input id="${id}" ${ex||''}></div>`;
+  let mid='';
+  if(cat==='mons')mid=`<div class="row">${f('m-cr','Challenge','placeholder="1/2"')}${f('m-ty','Type','placeholder="Large beast"')}</div><div class="row">${f('m-ac','Armor class','type="number" value="12"')}${f('m-hp','Hit points','type="number" value="10"')}${f('m-sp','Speed','placeholder="30 ft."')}</div>
+   <span class="lbl">Ability scores</span><div class="row">${ABIL.map(k=>`<div style="width:64px"><label class="lbl" for="m-a-${k}">${k.toUpperCase()}</label><input id="m-a-${k}" type="number" value="10"></div>`).join('')}</div>`;
+  else if(cat==='npcs')mid=`<div class="row">${f('m-ty','Role or short note','placeholder="Smuggler, owes the party a favor"')}</div>`;
+  else if(cat==='items')mid=`<div class="row">${f('m-ty','Type','placeholder="Weapon, potion, wondrous item"')}</div>`;
+  return wrap('Custom '+L,`<div class="row">${f('m-name','Name')}</div>${mid}
+  <label class="lbl" for="m-d">${cat==='mons'?'Traits and actions':'Description'}</label><textarea id="m-d"></textarea>
+  <div class="row"><label class="btn sm" style="display:inline-flex;align-items:center">Add picture<input class="vh" type="file" accept="image/*" data-c="addArt"></label><span class="muted sm" id="m-art-st">${m.art?'Picture attached.':'No picture yet.'}</span></div>
+  ${m.err?`<p class="err">${esc(m.err)}</p>`:''}<button class="btn primary" data-a="addresGo">Add</button><button class="btn ghost" data-a="closeModal">Cancel</button>`);
+}
+
+function gearModal(m){
+  const ch=ch$(m.ch),p=ch?P(ch,m.camp):null,g=p&&p.gear[m.i];if(!g)return '';
+  const inf=itemInfo(g),at=`data-ch="${m.ch}" data-camp="${m.camp}" data-i="${m.i}"`;
+  return wrap(g.n,`${bigArt(g.art,g.n)}<div class="row"><span class="tag">${esc(inf.type)}</span>${g.eq?'<span class="tag">equipped</span>':''}<span class="muted sm">Carrying ${g.q}</span></div>
+  <label class="lbl" for="g-desc">Description</label><textarea id="g-desc" data-c="gearDesc" ${at}>${esc(inf.d)}</textarea>
+  <div class="row"><label class="btn sm" style="display:inline-flex;align-items:center">${g.art?'Change picture':'Add picture'}<input class="vh" type="file" accept="image/*" data-c="gearArt" ${at}></label><button class="btn primary" data-a="closeModal">Close</button></div>`);
+}
+
+function skModal(m){
+  const c=camps.find(x=>x.id===m.camp),ch=ch$(m.ch),r=m.res,b=checkBonus(ch,c,m.label),busy=!r;
+  return wrap(m.label,`<p class="muted" style="text-align:center">${esc(ch.name)} · bonus <b class="mono">${sg(b)}</b> ${modeTag(m.mode)}</p>
+  <div class="bignum ${r&&r.d===20?'n20':r&&r.d===1?'n1':''}" id="sk-num">${r?r.t:'—'}</div>
+  <p class="mono" style="text-align:center;min-height:24px">${r?rollDetail(r):''}</p>${r&&r.d===20?'<p style="text-align:center"><b>Natural 20!</b></p>':r&&r.d===1?'<p style="text-align:center"><b>Natural 1.</b></p>':''}
+  <div class="row"><button class="btn primary grow" data-a="skAgain" data-m="n" ${busy?'disabled':''}>Roll</button><button class="btn grow" data-a="skAgain" data-m="a" ${busy?'disabled':''}>Advantage</button><button class="btn grow" data-a="skAgain" data-m="d" ${busy?'disabled':''}>Disadvantage</button></div>
+  <button class="btn ghost" data-a="closeModal">Close</button>`);
+}
+
+function showModal(c){
+  const s=c.shows.find(x=>(x.to==='all'||x.to===S.user.name)&&!S.seen[c.id+x.id]);if(!s)return '';
+  return wrap(s.name,`${bigArt(s.art,s.name)}${s.d?`<div class="desc">${esc(s.d)}</div>`:''}<p class="muted sm">Shown by ${esc(s.from)}.</p><button class="btn primary" data-a="showClose" data-id="${s.id}">Close</button>`,false);
+}
+
+function startSk(mode){
+  const m=S.modal;if(!m||m.t!=='skroll'||S.rolling)return;
+  const c=camps.find(x=>x.id===m.camp),ch=ch$(m.ch);
+  m.mode=mode;m.res=null;render();
+  tumble('sk-num',20,vals=>{const d=pickDie(vals,mode),b=checkBonus(ch,c,m.label);m.res={d,v:vals,mode,b,t:d+b,ch:ch.name};logRoll(c,(S.role==='dm'?'DM':S.user.name)+' rolled '+m.label+' for '+ch.name+': '+m.res.t+' ('+rollDetail(m.res)+')');render();},nDice(mode));
+}
+
+const LOGK=[['all','All'],['roll','Rolls'],['item','Items'],['hp','Damage & healing'],['enc','Encounter']];
+function logView(c,dm){
+  const list=c.log.filter(e=>(S.logF==='all'||e.kind===S.logF)&&(dm||e.vis));
+  return `<div class="row" style="gap:6px;margin-bottom:12px">${LOGK.map(([k,l])=>`<button class="chip ${S.logF===k?'on':''}" data-a="logF" data-k="${k}">${l}</button>`).join('')}</div>
+  ${dm?'<p class="muted sm" style="margin-bottom:10px">Your own rolls stay hidden until you press "Show to players".</p>':''}
+  ${list.map(e=>`<div class="roll"><div class="row between" style="flex-wrap:nowrap"><span>${esc(e.text)}</span><span class="row" style="flex-wrap:nowrap;gap:8px"><span class="muted sm mono">${esc(e.t)}</span></span></div>${dm?`<div class="row" style="margin-top:6px">${e.vis?'<span class="tag">Visible to players</span>':'<span class="tag" style="color:var(--ember)">Hidden from players</span>'}<button class="btn xs" data-a="logShow" data-id="${e.id}">${e.vis?'Hide':'Show to players'}</button></div>`:''}</div>`).join('')||empty('Nothing logged yet. Rolls, items, damage and encounters show up here.')}`;
+}
+const dmLog=c=>logView(c,true);
+function campaignView(){
+  const c=curCamp(),dm=S.role==='dm',tabs=dm?DMTABS:PTABS;
+  if(!tabs.some(t=>t[0]===S.tab)) S.tab=tabs[0][0];
+  let banner='';
+  if(!dm){const p=pendingFor(c);if(p&&S.dismiss[p.id])banner=`<div class="req"><div><b>${esc(c.dm)}</b> is waiting on your <b>${esc(p.label)}</b> roll.</div><button class="btn ember" data-a="rpOpen">Roll now</button></div>`;}
+  const pi=!dm&&pendingInit(c);if(pi&&S.dismiss[pi])banner+=`<div class="req"><div>The DM started an encounter. <b>Roll for initiative.</b></div><button class="btn ember" data-a="initOpen">Roll now</button></div>`;
+  return `${c.status==='done'?'<div class="note">This campaign is marked done. You can still look around.</div>':''}${banner}<div class="tabs ${dm?'dm':''}" role="tablist">${tabs.map(t=>`<button class="tab ${S.tab===t[0]?'on':''}" role="tab" aria-selected="${S.tab===t[0]}" data-a="tab" data-t="${t[0]}">${!dm&&t[0]==='enc'&&!c.init.active?'No Encounter':t[1]}</button>`).join('')}</div>${dm?dmBody(c):playerBody(c)}`;
+}
+
+/* roll request prompt for players */
+const pendingInit=c=>c.init.active&&initChar(c)?'init'+c.init.n:null;
+const pendingFor=c=>c.prompts.find(p=>p.targets.includes(S.user.name)&&!p.res[S.user.name]);
+function promptModal(){
+  const c=curCamp();if(!c)return '';
+  if(S.rpDone){
+    const r=S.rpDone.res;
+    return wrap('Result',`<p class="muted">${esc(S.rpDone.label)} for ${esc(S.rpDone.dm)}</p><div class="bignum ${r.d===20?'n20':r.d===1?'n1':''}">${r.t}</div>
+    <p class="mono" style="text-align:center">${rollDetail(r)}${r.phys?' · real die':''}</p>${r.d===20?'<p style="text-align:center"><b>Natural 20!</b></p>':r.d===1?'<p style="text-align:center"><b>Natural 1.</b></p>':''}
+    <p class="muted sm" style="text-align:center">Sent to ${esc(S.rpDone.dm)}.</p><button class="btn primary" data-a="rpDone">Done</button>`,false);
+  }
+  const p=pendingFor(c),ch=reqChar(c,p),ic=initChar(c);
+  if(!ch||!p||S.dismiss[p.id]){
+    const pi=pendingInit(c);
+    if(pi&&!S.dismiss[pi])return wrap('Roll for Initiative',`<p>The DM started an encounter. Roll to find your place in the turn order.</p><p class="muted">Your Dexterity bonus for ${esc(ic.name)} is <b class="mono">${sg(mod(ic.abil.dex))}</b>, added for you.</p>
+  <div class="bignum" id="in-num">—</div><button class="btn ember" data-a="inRoll">Roll d20</button>
+  <div class="divider">or use your own dice</div>
+  <div class="row"><input id="in-phys" class="grow" type="number" min="1" max="20" placeholder="Result on your d20" data-enter="inPhys" aria-label="Result on your real d20"><button class="btn" data-a="inPhys">Use this result</button></div>
+  <button class="btn ghost" data-a="inLater">Later</button>`,false);
+    return showModal(c);
+  }
+  const pm=p.mode||'n',two=pm!=='n';
+  return wrap('Roll request',`<p><b>${esc(c.dm)}</b> asks for a <b>${esc(p.label)}</b> check ${modeTag(pm)}</p><p class="muted">Your bonus is <b class="mono">${sg(checkBonus(ch,c,p.label))}</b> for ${esc(ch.name)}.</p>
+  <div class="bignum" id="rp-num">—</div><button class="btn ember" data-a="rpRoll">${two?'Roll 2d20 ('+MODE[pm].toLowerCase()+')':'Roll virtual d20'}</button>
+  <div class="divider">or use your own dice</div>
+  <div class="row"><input id="rp-phys" class="grow" type="number" min="1" max="20" placeholder="${two?'First d20':'Result on your d20'}" data-enter="rpPhys" aria-label="Result on your real d20">${two?'<input id="rp-phys2" class="grow" type="number" min="1" max="20" placeholder="Second d20" data-enter="rpPhys" aria-label="Second real d20">':''}<button class="btn" data-a="rpPhys">Use this result</button></div>
+  <button class="btn ghost" data-a="rpLater">Later</button>`,false);
+}
+
+/* modals */
+function modalView(){
+  const m=S.modal,c=m.camp?camps.find(x=>x.id===m.camp):null;
+  const close='<button class="btn ghost" data-a="closeModal">Cancel</button>';
+  switch(m.t){
+    case 'role': return wrap(c.name,`<p class="muted">Session ${c.session} · DM ${esc(c.dm)}</p><button class="btn ember" data-a="roleDM">Join as DM</button><button class="btn primary" data-a="rolePlayer">Join as Player</button>${close}`);
+    case 'dmpw': return wrap('DM password',`<p class="muted">Enter the password the DM chose for ${esc(c.name)}.</p><input id="m-pw" type="password" data-enter="dmpwGo" autocomplete="off" aria-label="DM password">${m.err?`<p class="err">${esc(m.err)}</p>`:''}<p class="muted sm">Demo password: ${esc(c.pw)}</p><button class="btn ember" data-a="dmpwGo">Enter as DM</button>${close}`);
+    case 'newcamp': return wrap('New campaign',`<label class="lbl" for="m-name">Campaign name</label><input id="m-name"><label class="lbl" for="m-pw">DM password</label><input id="m-pw" type="password"><label class="lbl" for="m-em">Backup email</label><input id="m-em" type="email" placeholder="you@example.com" data-enter="newcampGo"><p class="muted sm">We send a reset link to this email so a forgotten password never costs you the campaign.</p>${m.err?`<p class="err">${esc(m.err)}</p>`:''}<button class="btn ember" data-a="newcampGo">Create and enter as DM</button>${close}`);
+    case 'joincode': return wrap('Join with code',`<label class="lbl" for="m-code">Campaign code</label><input id="m-code" placeholder="CROWN-4821" data-enter="joinGo" autocapitalize="characters">${m.err?`<p class="err">${esc(m.err)}</p>`:''}<button class="btn primary" data-a="joinGo">Find campaign</button>${close}`);
+    case 'pickchar':{
+      const seated=c.members.find(x=>x.player===S.user.name),list=myChars().filter(ch=>!seated||ch.id!==seated.charId);
+      return wrap(seated?'Switch character':'Bring a character',`<p class="muted">${seated?'The new character takes your seat in the party. Each one keeps its own progress in this campaign.':'Pick who joins '+esc(c.name)+'. Their progress here starts separate from other campaigns.'}</p>${list.map(ch=>`<button class="charcard" data-a="pickGo" data-id="${ch.id}">${art(ch,48)}<div class="grow"><div class="nm">${esc(ch.name)}</div><div class="muted sm">${esc(clsLine(ch))}</div></div></button>`).join('')}<button class="btn" data-a="modalNewChar">Create a new character</button>${close}`);
+    }
+    case 'newchar': return wrap('New character',`<label class="lbl" for="m-name">Name</label><input id="m-name">
+      <div class="row" style="align-items:flex-start">${pickField('m-race','Race',RACES)}${pickField('m-cls','Class',CLASSES,'','clsChange')}</div>
+      <div><label class="lbl" for="m-sub">Subclass</label><select id="m-sub" data-c="custToggle" data-t="m-sub-c">${subOpts('Barbarian')}</select><input id="m-sub-c" hidden placeholder="Type your own" aria-label="Custom subclass" style="margin-top:6px"></div>
+      <div class="row"><div class="grow"><label class="lbl" for="m-age">Age</label><input id="m-age" type="number" value="25"></div><div class="grow"><label class="lbl" for="m-h">Height</label><input id="m-h" placeholder="5'8&quot;"></div></div>
+      <label class="lbl" for="m-lore">Backstory</label><textarea id="m-lore"></textarea>${m.err?`<p class="err">${esc(m.err)}</p>`:''}<button class="btn primary" data-a="newcharGo">Create character</button>${close}`);
+    case 'addcomb': return wrap('Add to the fight',`<label class="lbl" for="m-name">Name</label><input id="m-name" placeholder="Goblin archer"><div class="row"><div class="grow"><label class="lbl" for="m-init">Initiative</label><input id="m-init" type="number" value="10"></div><div class="grow"><label class="lbl" for="m-hp">HP</label><input id="m-hp" type="number" value="10"></div></div><label class="lbl" for="m-kind">Type</label><select id="m-kind"><option value="monster">Monster</option><option value="npc">NPC</option></select><button class="btn ember" data-a="addcombGo">Add</button><button class="btn" data-a="addPlayers">Add all players</button>${close}`);
+    case 'addspell': return wrap('Custom spell',`<label class="lbl" for="m-name">Name</label><input id="m-name"><div class="row"><div class="grow"><label class="lbl" for="m-lv">Level</label><select id="m-lv">${[0,1,2,3,4,5,6,7,8,9].map(l=>`<option value="${l}">${l===0?'Cantrip':'Level '+l}</option>`).join('')}</select></div><div class="grow"><label class="lbl" for="m-sc">School</label><input id="m-sc" placeholder="Optional"></div></div><label class="lbl" for="m-t">What it does</label><textarea id="m-t" style="min-height:90px"></textarea><button class="btn primary" data-a="addspellGo">Add spell</button>${close}`);
+    case 'official':{
+      const ch=ch$(m.ch),known=new Set(ch.spells.map(s=>s.n)),q=(m.q||'').toLowerCase();
+      const list=SPELLBOOK.filter(s=>(m.lv==='all'||s[1]===Number(m.lv))&&(!q||s[0].toLowerCase().includes(q))&&(!m.mine||s[3].split(',').includes(ch.cls)));
+      const lvChip=(v,l)=>`<button class="chip ${String(m.lv)===String(v)?'on':''}" data-a="spLv" data-l="${v}">${l}</button>`;
+      return wrap('Official spells',`<input id="m-q" type="search" placeholder="Search by name" value="${esc(m.q||'')}" data-c="spellQ" aria-label="Search spells">
+      <div class="row" style="gap:6px">${lvChip('all','All')}${lvChip(0,'Cantrips')}${[1,2,3,4,5].map(l=>lvChip(l,'L'+l)).join('')}</div>
+      <div class="row"><button class="chip ${m.mine?'on':''}" data-a="spMine">Only ${esc(ch.cls)} spells</button><span class="muted sm">${list.length} shown</span></div>
+      <div>${list.map(s=>`<div class="spell"><div class="row between"><b>${esc(s[0])}</b>${known.has(s[0])?'<span class="tag">Added</span>':`<button class="btn xs primary" data-a="addOfficial" data-n="${esc(s[0])}">Add</button>`}</div><div class="tag">${s[1]===0?'Cantrip':'Level '+s[1]} · ${esc(s[2])}</div><div class="muted sm">${esc(s[4])}</div></div>`).join('')||empty('No spells match.')}</div>
+      <button class="btn" data-a="closeModal">Done</button>`);
+    }
+    case 'addnpc': return wrap('Add NPC',`<label class="lbl" for="m-name">Name</label><input id="m-name"><label class="lbl" for="m-t">Note</label><input id="m-t" data-enter="addnpcGo"><button class="btn ember" data-a="addnpcGo">Add NPC</button>${close}`);
+    case 'npcv':{const n=c.npcs.find(x=>x.id===m.id);if(!n)return '';return wrap(n.name,`${bigArt(n.art,n.name)}<div class="muted">${esc(n.note||'')}</div><div class="desc">${esc(n.d||'')}</div><p class="muted sm">The DM has let you play this character.</p><button class="btn primary" data-a="closeModal">Close</button>`);}
+    case 'offres': return offModal(m,c);
+    case 'addres': return addResModal(m);
+    case 'res': return resModal(m,c);
+    case 'gear': return gearModal(m);
+    case 'skroll': return skModal(m);
+    case 'confirm': return wrap(m.title,`<p>${esc(m.msg)}</p><button class="btn dsolid" data-a="confirmGo">${esc(m.yes)}</button>${close}`);
+  }
+  return '';
+}
+
+const FORM_MODALS=['addres','dmpw','newcamp','joincode','newchar','addcomb','addspell','addnpc'];
+function render(){
+  const app=$('#app');
+  if(!S.user) app.innerHTML=authView();
+  else app.innerHTML=header()+(S.screen==='campaign'?'':'<div class="orn" aria-hidden="true"><span>◆</span></div>')+(S.screen==='campaign'?campaignView():S.screen==='characters'?charactersView():S.screen==='character'?characterView():campaignsView());
+  let mh='';
+  if(S.user&&S.modal) mh=modalView();
+  else if(S.user&&S.screen==='campaign'&&S.role==='player') mh=promptModal();
+  $('#modal').innerHTML=mh;
+  if(S.modal&&FORM_MODALS.includes(S.modal.t)){const f=document.querySelector('#modal input,#modal textarea');if(f)f.focus();}
+}
+
+/* ---------- actions ---------- */
+function enterCamp(c,role){S.campId=c.id;S.role=role;S.tab=null;S.openSheet=null;S.screen='campaign';S.modal=null;S.rpDone=null;}
+function enterPlayer(c){
+  if(c.members.some(m=>m.player===S.user.name)){enterCamp(c,'player');return;}
+  S.modal={t:myChars().length&&!S.user.guest?'pickchar':'newchar',camp:c.id};
+}
+/* put a character in the player's seat in a campaign, replacing the old one if there is one */
+function seat(c,ch){
+  const m=c.members.find(x=>x.player===S.user.name);
+  if(m){const old=m.charId;m.charId=ch.id;c.init.list.forEach(x=>{if(x.charId===old)x.charId=ch.id;});delete c.ctrl[old];}
+  else c.members.push({player:S.user.name,charId:ch.id});
+  P(ch,c.id);
+}
+function createChar(f){
+  const ab=[15,14,13,12,10,8];
+  const ch={id:'c'+Date.now(),name:f.name,race:f.race,cls:f.cls,sub:f.sub||'',owner:S.user.guest?null:S.user.name,createdBy:S.user.name+(S.user.guest?' (guest)':''),created:new Date().toISOString().slice(0,10),
+    age:Number(f.age)||25,height:f.h||'5\'8"',hue:rnd(360),art:null,abil:{str:ab[0],dex:ab[1],con:ab[2],int:ab[3],wis:ab[4],cha:ab[5]},ac:10,speed:30,skills:[],lore:f.lore,spells:[],prog:{}};
+  chars.push(ch);return ch;
+}
+function simulate(c,p){
+  p.targets.forEach(pl=>{
+    if(p.res[pl]) return;
+    setTimeout(()=>{
+      const m=c.members.find(m=>controller(c,m.charId)===pl);if(!m||p.res[pl])return;
+      const r=rollFor(ch$(m.charId),c,p.label,p.mode);p.res[pl]=r;
+      logAdd(c,'roll',pl+' ('+r.ch+') rolled '+p.label+': '+r.t+' ('+rollDetail(r)+')',true);render();
+    },900+Math.random()*2800);
+  });
+}
+function finishInit(c,ch,d,phys){
+  const I=c.init,b=mod(ch.abil.dex),t=d+b;let x=I.list.find(y=>y.charId===ch.id);
+  if(!x){x={id:'i'+ch.id,kind:'pc',charId:ch.id,init:0};I.list.push(x);}
+  x.init=t;x.pend=false;I.rolled[ch.id]=true;
+  logAdd(c,'enc',ch.name+' rolled initiative: '+t+' ('+d+' '+(b<0?'−':'+')+' '+Math.abs(b)+')'+(phys?' with a real die':''));
+}
+function finishRoll(c,ch,p,vals,phys){
+  const mode=p.mode||'n',d=pickDie(vals,mode),b=checkBonus(ch,c,p.label),r={d,v:vals,mode,b,t:d+b,ch:ch.name,phys:!!phys};
+  logAdd(c,'roll',S.user.name+' ('+ch.name+') rolled '+p.label+': '+r.t+' ('+rollDetail(r)+')'+(phys?' with a real die':''),true);p.res[S.user.name]=r;S.rpDone={label:p.label,dm:c.dm,res:r};render();
+}
+function ctx(el){const ch=ch$(el.dataset.ch);return {ch,c:camps.find(x=>x.id===el.dataset.camp),p:el.dataset.camp?P(ch,el.dataset.camp):null};}
+
+const A={
+  authMode(el){S.authMode=el.dataset.m;},
+  authGo(){
+    const m=S.authMode,nm=val('a-name'),em=val('a-email');
+    if(m==='guest'){if(!nm){toast('Pick a display name first.');return false;}S.user={name:nm,guest:true};}
+    else{const local=em?em.split('@')[0]:'';const name=nm||(local?local[0].toUpperCase()+local.slice(1):'Mohammed');S.user={name,guest:false};}
+    S.screen='campaigns';
+  },
+  signout(){S.user=null;S.screen='campaigns';S.authMode='signin';S.modal=null;},
+  go(el){S.screen=el.dataset.s;S.modal=null;},
+  filter(el){S.filter=el.dataset.f;},
+  modal(el){S.modal={t:el.dataset.t,camp:S.campId,ch:el.dataset.ch,cat:el.dataset.cat,q:'',lv:'all',mine:false};},
+  closeModal(){S.modal=null;},
+  modalBg(el,e){if(e.target!==el)return false;S.modal=null;},
+  openCamp(el){S.modal={t:'role',camp:el.dataset.id};},
+  roleDM(){S.modal={t:'dmpw',camp:S.modal.camp};},
+  rolePlayer(){enterPlayer(camps.find(x=>x.id===S.modal.camp));},
+  dmpwGo(){const c=camps.find(x=>x.id===S.modal.camp);if(val('m-pw')===c.pw)enterCamp(c,'dm');else S.modal.err='That password does not match.';},
+  newcampGo(){
+    const n=val('m-name'),pw=val('m-pw'),em=val('m-em');
+    if(!n||!pw||!em){S.modal.err='Add a name, a password and a backup email.';return;}
+    if(!/^\S+@\S+\.\S+$/.test(em)){S.modal.err='That email does not look right.';return;}
+    const c={id:'k'+Date.now(),name:n,session:1,dm:S.user.name,status:'active',code:genCode(n),pw,members:[],npcs:[],init:{round:1,turn:0,list:[]},prompts:[],ctrl:{}};fixCamp(c);
+    camps.unshift(c);enterCamp(c,'dm');S.tab='settings';toast('Created. Your join code is '+c.code);
+  },
+  joinGo(){const code=val('m-code').toUpperCase(),c=camps.find(x=>x.code===code);if(!c){S.modal.err='No campaign has that code. Demo: CROWN-4821';return;}S.modal={t:'role',camp:c.id};},
+  pickGo(el){
+    const c=camps.find(x=>x.id===S.modal.camp),ch=ch$(el.dataset.id),inside=S.screen==='campaign'&&S.campId===c.id;
+    seat(c,ch);S.modal=null;if(!inside)enterCamp(c,'player');toast('Now playing '+ch.name+'.');
+  },
+  modalNewChar(){S.modal={t:'newchar',camp:S.modal.camp};},
+  newcharGo(){
+    const f={name:val('m-name'),race:pickVal('m-race'),cls:pickVal('m-cls'),sub:pickVal('m-sub'),age:val('m-age'),h:val('m-h'),lore:val('m-lore')};
+    if(!f.name){S.modal.err='Give your character a name.';return;}
+    if(!f.race||!f.cls){S.modal.err='Pick or type a race and a class.';return;}
+    const c=S.modal.camp?camps.find(x=>x.id===S.modal.camp):null,ch=createChar(f);
+    if(c){const inside=S.screen==='campaign'&&S.campId===c.id;seat(c,ch);S.modal=null;if(!inside)enterCamp(c,'player');toast(S.user.guest?'Saved with the DM. Make an account to keep it.':'Now playing '+ch.name+'.');}
+    else{S.modal=null;S.screen='character';S.charId=ch.id;S.charTab='info';}
+  },
+  leave(){S.screen='campaigns';S.campId=null;S.role=null;S.rpDone=null;},
+  pickCtl(el){S.pick[S.campId]=el.dataset.id;},
+  switchRole(){S.modal={t:'role',camp:S.campId};},
+  switchChar(){S.modal={t:S.user.guest?'newchar':'pickchar',camp:S.campId};},
+  savePlayer(){
+    const c=curCamp(),ch=myChar(c);
+    if(!ch){toast('Nothing to save yet.');return false;}
+    S.saved[c.id+':'+ch.id]=nowT();toast('Progress saved for '+ch.name+'.');
+  },
+  tab(el){S.tab=el.dataset.t;S.openSheet=null;},
+  openSheet(el){S.openSheet=el.dataset.id;window.scrollTo(0,0);},
+  closeSheet(){S.openSheet=null;},
+  openChar(el){S.charId=el.dataset.id;S.screen='character';S.charTab='info';S.charCamp=null;},
+  charTab(el){S.charTab=el.dataset.t;},
+  charCamp(el){S.charCamp=el.dataset.id;},
+  /* confirmations and deletes */
+  ask(el){S.modal={t:'confirm',title:el.dataset.title,msg:el.dataset.msg,yes:el.dataset.yes||'Delete',do:el.dataset.do,id:el.dataset.id,camp:el.dataset.camp};},
+  confirmGo(){const m=S.modal;S.modal=null;A[m.do]({dataset:{id:m.id,camp:m.camp}});},
+  delCampDo(el){const i=camps.findIndex(c=>c.id===el.dataset.id);if(i>=0)camps.splice(i,1);S.screen='campaigns';S.campId=null;S.role=null;toast('Campaign deleted.');},
+  delCharDo(el){
+    const id=el.dataset.id,i=chars.findIndex(x=>x.id===id);if(i<0)return;
+    const nm=chars[i].name;chars.splice(i,1);
+    camps.forEach(c=>{c.members=c.members.filter(m=>m.charId!==id);c.init.list=c.init.list.filter(x=>x.charId!==id);delete c.ctrl[id];});
+    S.screen='characters';S.charId=null;toast(nm+' was deleted.');
+  },
+  delProgDo(el){
+    const ch=ch$(el.dataset.id),c=camps.find(x=>x.id===el.dataset.camp);if(!ch)return;
+    delete ch.prog[el.dataset.camp];
+    if(c){c.members=c.members.filter(m=>m.charId!==ch.id);c.init.list=c.init.list.filter(x=>x.charId!==ch.id);delete c.ctrl[ch.id];}
+    S.charCamp=null;toast('Progress deleted.');
+  },
+  /* sheet */
+  hp(el){const {ch,c,p}=ctx(el),old=p.hp;p.hp=clamp(p.hp+Number(el.dataset.d),0,p.max);const d=p.hp-old;if(d)logAdd(c,'hp',d<0?ch.name+' took '+(-d)+' damage ('+old+' → '+p.hp+' HP)':ch.name+' healed '+d+' ('+old+' → '+p.hp+' HP)');},
+  skillTog(el){const ch=ch$(el.dataset.ch),k=el.dataset.sk,i=ch.skills.indexOf(k);if(i<0)ch.skills.push(k);else ch.skills.splice(i,1);},
+  slot(el){const {p}=ctx(el),s=p.slots[el.dataset.i],k=Number(el.dataset.k);s.used=s.used>=k?k-1:k;},
+  slotRest(el){const {p}=ctx(el);p.slots.forEach(s=>{s.used=0;});toast('Slots restored.');},
+  slotMax(el){const {p}=ctx(el),x=p.slots[el.dataset.i];x.max=clamp(x.max+Number(el.dataset.d),1,9);x.used=Math.min(x.used,x.max);},
+  slotEditTog(){S.slotEdit=!S.slotEdit;},
+  cast(el){
+    const {p}=ctx(el),l=Number(el.dataset.l),x=p.slots.filter(y=>y.l>=l&&y.used<y.max).sort((a,b)=>a.l-b.l)[0];
+    if(!x){toast('No spell slot left for that spell.');return false;}
+    x.used++;toast('Cast with a level '+x.l+' slot.');
+  },
+  spOpen(el){const k=el.dataset.k;S.openSp[k]=!S.openSp[k];},
+  spF(el){S.spLvF=el.dataset.l;},
+  lvl(el){
+    const {p}=ctx(el);p.level=clamp(p.level+Number(el.dataset.d),1,20);
+    const lo=XP[p.level-1],hi=XP[p.level];p.exp=p.level===20?Math.max(p.exp,lo):clamp(p.exp,lo,hi-1);
+  },
+  slotDel(el){const {p}=ctx(el);p.slots.splice(el.dataset.i,1);},
+  slotAdd(el){
+    const {p}=ctx(el),l=Number(val('sl-l')),ex=p.slots.find(x=>x.l===l);
+    if(ex)ex.max=Math.min(9,ex.max+1);else{p.slots.push({l,max:1,used:0});p.slots.sort((a,b)=>a.l-b.l);}
+  },
+  gearAdd(el){const {ch,c,p}=ctx(el),n=val('g-name');if(!n)return false;p.gear.push({n,q:1,eq:0});logAdd(c,'item',ch.name+' picked up '+n+'.');},
+  gearQ(el){const {p}=ctx(el),g=p.gear[el.dataset.i];g.q=Math.max(1,g.q+Number(el.dataset.d));},
+  gearDel(el){const {p}=ctx(el);p.gear.splice(el.dataset.i,1);},
+  coinD(el){const {p}=ctx(el);p.money[el.dataset.k]=Math.max(0,p.money[el.dataset.k]+Number(el.dataset.d));},
+  /* spells */
+  delSpell(el){ch$(el.dataset.ch).spells.splice(el.dataset.i,1);},
+  addspellGo(){
+    const ch=ch$(S.modal.ch),n=val('m-name');if(!n){toast('Give the spell a name.');return false;}
+    ch.spells.push({n,l:Number(val('m-lv')),s:val('m-sc'),t:val('m-t')});S.modal=null;
+  },
+  addOfficial(el){const ch=ch$(S.modal.ch),s=SPELLBOOK.find(x=>x[0]===el.dataset.n);if(s&&!ch.spells.some(x=>x.n===s[0]))ch.spells.push({n:s[0],l:s[1],s:s[2],t:s[4]});},
+  spLv(el){S.modal.lv=el.dataset.l;},
+  spMine(){S.modal.mine=!S.modal.mine;},
+  /* dice */
+  dieSel(el){S.die=Number(el.dataset.d);},
+  modD(el){const d=Number(el.dataset.d);S.mod=d===0?0:clamp(S.mod+d,-20,20);},
+  modeSet(el){S.mode=el.dataset.m;},
+  rollModeSet(el){S.rollMode=el.dataset.m;},
+  roll(el){
+    if(S.rolling)return false;const die=S.die,mode=el.dataset.m;
+    tumble('tray-num',die,vals=>{const k=pickDie(vals,mode),t=k+S.mod;S.last={d:die,v:vals,k,mode,mod:S.mod,t};pushHist(die,t,false,mode);{const c=curCamp();if(c&&S.screen==='campaign')logRoll(c,(S.role==='dm'?'DM':S.user.name)+' rolled d'+die+(mode!=='n'?' with '+MODE[mode].toLowerCase():'')+': '+t+' ('+vals.join(' / ')+(S.mod?' '+sg(S.mod):'')+')');}render();},nDice(mode));return false;
+  },
+  physLog(){
+    const d=Number(val('phys-d')),v=Number(val('phys-v'));
+    if(!v||v<1||v>d||v%1){toast('Enter a whole number from 1 to '+d+'.');return false;}
+    const t=v+S.mod;S.last={d,v:[v],k:v,mode:'n',mod:S.mod,t,phys:true};pushHist(d,t,true,'n');
+  },
+  rpRoll(){
+    if(S.rolling)return false;const c=curCamp(),p=pendingFor(c),ch=reqChar(c,p);if(!p)return false;
+    tumble('rp-num',20,vals=>finishRoll(c,ch,p,vals,false),nDice(p.mode||'n'));return false;
+  },
+  rpPhys(){
+    const c=curCamp(),p=pendingFor(c),ch=reqChar(c,p);if(!p)return false;
+    const two=(p.mode||'n')!=='n',vals=[Number(val('rp-phys'))];if(two)vals.push(Number(val('rp-phys2')));
+    if(vals.some(v=>!v||v<1||v>20||v%1)){toast(two?'Enter both d20 results, 1 to 20.':'Enter a whole number from 1 to 20.');return false;}
+    finishRoll(c,ch,p,vals,true);return false;
+  },
+  /* round 4: skills, gear, resources */
+  skRoll(el){S.modal={t:'skroll',camp:el.dataset.camp,ch:el.dataset.ch,label:el.dataset.key,mode:S.mode,res:null};startSk(S.mode);return false;},
+  skAgain(el){startSk(el.dataset.m);return false;},
+  gearOpen(el){S.modal={t:'gear',ch:el.dataset.ch,camp:el.dataset.camp,i:Number(el.dataset.i)};},
+  resCat(el){S.resCat=el.dataset.k;},
+  resOpen(el){S.modal={t:'res',camp:S.campId,cat:el.dataset.cat,id:el.dataset.id};},
+  resPrev(el){S.modal={t:'res',camp:S.campId,cat:'mons',id:el.dataset.id,off:1,back:S.modal};},
+  resBack(){S.modal=S.modal.back||null;},
+  resKeep(){const c=curCamp(),r=resRec(S.modal,c);addMon(c,r);toast(r.name+' added to your monsters.');},
+  resEnc(){
+    const c=curCamp(),m=S.modal,r=resRec(m,c);if(!r)return false;
+    const rec=m.off?addMon(c,r):r,dx=mod(rec.abil.dex);let nm=rec.name,i=1;
+    while(c.init.list.some(x=>x.name===nm)){i++;nm=rec.name+' '+i;}
+    c.init.list.push({id:newId('i'),kind:'monster',name:nm,init:rnd(20)+dx,hp:rec.hp,max:rec.hp,dex:dx,mid:rec.id});
+    toast(nm+' joined the encounter.');return false;
+  },
+  resGive(){
+    const c=curCamp(),r=resRec(S.modal,c),pl=val('res-pl'),mem=c.members.find(x=>x.player===pl);
+    if(!r||!mem){toast('Pick a player first.');return false;}
+    const ch=ch$(mem.charId),p=P(ch,c.id),ex=p.gear.find(g=>g.n===r.name);
+    if(ex)ex.q++;else p.gear.push({n:r.name,q:1,eq:0,type:r.type,d:r.d,art:r.art});
+    logAdd(c,'item',ch.name+' ('+pl+') received '+r.name+' from the DM.');toast('Gave '+r.name+' to '+pl+' ('+ch.name+').');return false;
+  },
+  resShow(){
+    const c=curCamp(),r=resRec(S.modal,c),to=val('res-to');
+    if(!r||!r.art){toast('Add a picture first.');return false;}
+    c.shows.push({id:newId('s'),name:r.name,art:r.art,d:r.d||'',to:to==='__all'?'all':to,from:c.dm});
+    toast('Showing '+r.name+' to '+(to==='__all'?'everyone':to)+'.');return false;
+  },
+  resDel(el){const [cat,id]=el.dataset.id.split(':'),c=curCamp();c[cat]=c[cat].filter(x=>x.id!==id);toast('Removed.');},
+  offAdd(el){
+    const c=curCamp(),cat=el.dataset.cat,n=el.dataset.n;
+    if(cat==='mons')addMon(c,MONSTERS.find(x=>x.name===n));
+    else if(cat==='items'){const x=ITEMS.find(y=>y[0]===n);c.items.push({id:newId('t'),name:x[0],type:x[1],d:x[2],art:null,off:1});}
+    else if(cat==='npcs'){const x=NPC_OFF.find(y=>y[0]===n);c.npcs.push({id:newId('n'),name:x[0],note:x[1],d:x[2],vis:false,art:null,off:1});}
+    else{const x=MAPS_OFF.find(y=>y[0]===n);c.maps.push({id:newId('p'),name:x[0],d:x[1],art:mapSvg(x[2]),off:1});}
+    toast(n+' added.');
+  },
+  addresGo(){
+    const m=S.modal,c=curCamp(),cat=m.cat,name=val('m-name'),d=val('m-d');
+    if(!name){m.err='Give it a name.';return;}
+    if(cat==='mons'){const abil={};ABIL.forEach(k=>{abil[k]=clamp(Number(val('m-a-'+k))||10,1,30);});
+      c.mons.push({id:newId('m'),name,cr:val('m-cr')||'1',type:val('m-ty')||'Monster',ac:Number(val('m-ac'))||10,hp:Number(val('m-hp'))||1,speed:val('m-sp')||'30 ft.',abil,d,art:m.art||null});}
+    else if(cat==='npcs')c.npcs.push({id:newId('n'),name,note:val('m-ty'),d,vis:false,art:m.art||null});
+    else if(cat==='items')c.items.push({id:newId('t'),name,type:val('m-ty')||'Item',d,art:m.art||null});
+    else c.maps.push({id:newId('p'),name,d,art:m.art||null});
+    S.modal=null;
+  },
+  showClose(el){S.seen[curCamp().id+el.dataset.id]=true;},
+  rpLater(){const p=pendingFor(curCamp());if(p)S.dismiss[p.id]=true;},
+  rpOpen(){S.dismiss={};},
+  rpDone(){S.rpDone=null;},
+  claim(el){
+    const id=el.dataset.id,nm=val('claim-'+id),ch=ch$(id);
+    if(!nm){toast('Type the account name first.');return false;}
+    const m=curCamp().members.find(x=>x.charId===id);m.player=nm;ch.owner=nm;ch.createdBy=nm;toast(ch.name+' now belongs to '+nm+'.');
+  },
+  /* encounter */
+  nextTurn(){const c=curCamp(),l=sorted(c);if(!l.length)return;const cur=c.init.turn%l.length,nx=(cur+1)%l.length;if(nx===0)c.init.round++;c.init.turn=nx;},
+  rollAll(){const c=curCamp();c.init.list.forEach(x=>{x.pend=false;if(x.charId)c.init.rolled[x.charId]=true;x.init=rnd(20)+(x.charId?mod(ch$(x.charId).abil.dex):(x.dex||0));});c.init.turn=0;c.init.round=1;},
+  delComb(el){const c=curCamp();c.init.list=c.init.list.filter(x=>x.id!==el.dataset.id);},
+  combHp(el){const c=curCamp(),x=c.init.list.find(y=>y.id===el.dataset.id),p=x.charId?P(ch$(x.charId),c.id):x,old=p.hp;p.hp=clamp(p.hp+Number(el.dataset.d),0,p.max);const d=p.hp-old,nm=cName(x);if(d)logAdd(c,'hp',d<0?nm+' took '+(-d)+' damage ('+old+' → '+p.hp+' HP)':nm+' healed '+d+' ('+old+' → '+p.hp+' HP)');},
+  addcombGo(){const c=curCamp(),n=val('m-name');if(!n)return;const hp=Number(val('m-hp'))||1;c.init.list.push({id:'i'+Date.now(),kind:val('m-kind'),name:n,init:Number(val('m-init'))||0,hp,max:hp,dex:0});S.modal=null;},
+  addPlayers(){const c=curCamp();c.members.forEach(m=>{if(!c.init.list.some(x=>x.charId===m.charId))c.init.list.push({id:'i'+m.charId,kind:'pc',charId:m.charId,init:rnd(20)+mod(ch$(m.charId).abil.dex)});});S.modal=null;},
+  /* rolls */
+  rollT(el){const p=el.dataset.p,i=S.rollSel.indexOf(p);if(i<0)S.rollSel.push(p);else S.rollSel.splice(i,1);},
+  rollAllT(){const c=curCamp(),all=c.members.map(m=>m.player);S.rollSel=S.rollSel.length===all.length?[]:[...all];},
+  rollKind(el){S.rollKind=el.dataset.k;},
+  sendRoll(){
+    const c=curCamp(),W=S.rollWho;let t,who;
+    if(W==='__all'||!c.members.some(m=>m.charId===W)){t=c.members.map(m=>controller(c,m.charId));who='everyone';}
+    else{t=[controller(c,W)];who=ch$(W).name;}
+    t=[...new Set(t)];if(!t.length){toast('Nobody to roll yet.');return false;}
+    const p={id:'p'+Date.now(),label:S.rollCheck,targets:t,res:{},mode:S.rollMode,chr:who==='everyone'?null:W};c.prompts.push(p);simulate(c,p);
+    logAdd(c,'roll','The DM asked '+who+' for a '+p.label+' roll'+(p.mode!=='n'?' with '+MODE[p.mode].toLowerCase():'')+'.',true);toast('Request sent.');
+  },
+  logF(el){S.logF=el.dataset.k;},
+  logShow(el){const c=curCamp(),e=c.log.find(x=>x.id===el.dataset.id);if(e)e.vis=!e.vis;},
+  startEnc(){
+    const c=curCamp(),I=c.init;I.active=true;I.n++;I.round=1;I.turn=0;I.rolled={};const n=I.n;
+    c.members.forEach(m=>{let x=I.list.find(y=>y.charId===m.charId);if(!x){x={id:'i'+m.charId,kind:'pc',charId:m.charId,init:0};I.list.push(x);}x.pend=true;x.init=0;});
+    logAdd(c,'enc','Encounter started.');
+    c.members.forEach(m=>{const pl=controller(c,m.charId);if(pl===S.user.name)return;
+      setTimeout(()=>{if(!I.active||I.n!==n||I.rolled[m.charId])return;finishInit(c,ch$(m.charId),rnd(20),false);render();},1500+Math.random()*3500);});
+  },
+  endEnc(){const c=curCamp(),I=c.init;I.active=false;I.list=[];I.rolled={};I.round=1;I.turn=0;logAdd(c,'enc','Encounter ended.');toast('Encounter ended.');},
+  initOpen(){const c=curCamp();delete S.dismiss['init'+c.init.n];},
+  inLater(){const k=pendingInit(curCamp());if(k)S.dismiss[k]=true;},
+  inRoll(){
+    if(S.rolling)return false;const c=curCamp(),ch=initChar(c);if(!ch)return false;
+    tumble('in-num',20,vals=>{finishInit(c,ch,vals[0],false);render();});return false;
+  },
+  inPhys(){
+    const c=curCamp(),ch=initChar(c),v=Number(val('in-phys'));if(!ch)return false;
+    if(!v||v<1||v>20||v%1){toast('Enter a whole number from 1 to 20.');return false;}
+    finishInit(c,ch,v,true);
+  },
+  /* swap */
+  npcCtl(el){const n=curCamp().npcs.find(x=>x.id===el.dataset.id),p=el.dataset.p;n.ctl=n.ctl||[];const i=n.ctl.indexOf(p);if(i<0)n.ctl.push(p);else n.ctl.splice(i,1);},
+  npcView(el){S.modal={t:'npcv',camp:S.campId,id:el.dataset.id};},
+  endSwaps(){curCamp().ctrl={};toast('All characters are back with their owners.');},
+  /* npcs */
+  addnpcGo(){const c=curCamp(),n=val('m-name');if(!n)return;c.npcs.push({id:'n'+Date.now(),name:n,note:val('m-t'),vis:false});S.modal=null;},
+  delNpc(el){const c=curCamp();c.npcs=c.npcs.filter(n=>n.id!==el.dataset.id);},
+  /* settings */
+  copyCode(){const c=curCamp();navigator.clipboard.writeText(c.code).then(()=>toast('Code copied.')).catch(()=>toast('Code: '+c.code));return false;},
+  sess(el){const c=curCamp();c.session=Math.max(1,c.session+Number(el.dataset.d));},
+  toggleDone(){const c=curCamp();c.status=c.status==='done'?'active':'done';},
+  setPw(){
+    const pw=val('np'),em=val('ne');
+    if(!pw||!/^\S+@\S+\.\S+$/.test(em)){toast('Enter a new password and a valid backup email.');return false;}
+    curCamp().pw=pw;toast('Saved. A reset link would go to '+em+'.');
+  }
+};
+
+const C={
+  set(el,v){
+    const {ch,p}=ctx(el);let path=el.dataset.p.split('.'),o=ch;
+    if(path[0]==='p'){o=p;path=path.slice(1);}
+    if(el.dataset.num){v=Number(v);if(isNaN(v))v=0;}
+    const key=path.join('.');
+    if(key.startsWith('abil.'))v=clamp(v,1,30);
+    if(key==='level')v=clamp(v,1,20);
+    if(/^slots\.\d+\.max$/.test(key))v=Math.max(0,Math.floor(v));
+    while(path.length>1)o=o[path.shift()];
+    o[path[0]]=v;
+    if(p){p.hp=Math.min(p.hp,p.max);p.slots.forEach(s=>{s.used=Math.min(s.used,s.max);});}
+  },
+  pickList(el,v){
+    const ch=ch$(el.dataset.ch),k=el.dataset.p,key=ch.id+k;
+    if(v==='__custom'){S.cust[key]=true;return;}
+    S.cust[key]=false;ch[k]=v;
+    if(k==='cls'){ch.sub='';S.cust[ch.id+'sub']=false;}
+  },
+  custToggle(el){const i=document.getElementById(el.dataset.t);if(i){i.hidden=el.value!=='__custom';if(!i.hidden)i.focus();}return false;},
+  clsChange(el){
+    C.custToggle(el);
+    const sub=document.getElementById('m-sub'),sc=document.getElementById('m-sub-c');
+    if(sub)sub.innerHTML=subOpts(el.value==='__custom'?'':el.value);
+    if(sc)sc.hidden=true;
+    return false;
+  },
+  art(el){
+    const f=el.files&&el.files[0];if(!f)return false;
+    const r=new FileReader(),ch=ch$(el.dataset.ch);
+    r.onload=()=>{ch.art=r.result;render();toast('Artwork updated.');};r.readAsDataURL(f);return false;
+  },
+  coin(el,v){const {p}=ctx(el);p.money[el.dataset.k]=Math.max(0,Math.floor(Number(v))||0);},
+  gearEq(el){const {p}=ctx(el);p.gear[el.dataset.i].eq=el.checked?1:0;},
+  initval(el,v){const x=curCamp().init.list.find(y=>y.id===el.dataset.id);x.init=Number(v)||0;},
+  rollCheck(el,v){S.rollCheck=v;return false;},
+  ctrl(el,v){const c=curCamp(),id=el.dataset.id;if(v===ownerOf(c,id))delete c.ctrl[id];else c.ctrl[id]=v;},
+  npcVis(el){const n=curCamp().npcs.find(x=>x.id===el.dataset.id);n.vis=el.checked;},
+  spellQ(el,v){S.modal.q=v;},
+  rollWho(el,v){S.rollWho=v;return false;},
+  gearDesc(el,v){const {p}=ctx(el);p.gear[el.dataset.i].d=v;return false;},
+  gearArt(el){
+    const f=el.files&&el.files[0];if(!f)return false;const {p}=ctx(el),g=p.gear[el.dataset.i],r=new FileReader();
+    r.onload=()=>{g.art=r.result;render();};r.readAsDataURL(f);return false;
+  },
+  resArt(el){
+    const f=el.files&&el.files[0];if(!f)return false;const rec=resRec(S.modal,curCamp()),r=new FileReader();
+    r.onload=()=>{rec.art=r.result;render();};r.readAsDataURL(f);return false;
+  },
+  addArt(el){
+    const f=el.files&&el.files[0];if(!f)return false;const m=S.modal,r=new FileReader();
+    r.onload=()=>{m.art=r.result;const t=document.getElementById('m-art-st');if(t)t.textContent='Picture attached.';};r.readAsDataURL(f);return false;
+  }
+};
+
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-a]');if(!el)return;
+  const fn=A[el.dataset.a];if(!fn)return;
+  if(el.dataset.a==='modalBg'&&e.target!==el)return;
+  if(fn(el,e)!==false)render();
+});
+document.addEventListener('change',e=>{
+  const el=e.target.closest('[data-c]');if(!el)return;
+  const fn=C[el.dataset.c];if(!fn)return;
+  if(fn(el,el.value)!==false)render();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.enter){
+    const b=document.querySelector('[data-a="'+e.target.dataset.enter+'"]');if(b){e.preventDefault();b.click();}
+  }
+  if(e.key==='Escape'&&S.modal){S.modal=null;render();}
+});
+camps.forEach(fixCamp);
+render();
+})();
+</script>
