@@ -1,7 +1,8 @@
 /* The Chronicle service worker: keeps the app shell available offline and picks up new versions quickly. */
-const V='chronicle-v4';
+const V='chronicle-v5';
 const SHELL=['./','./index.html','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
-self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()));});
+const SDK='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.js';
+self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(async c=>{await c.addAll(SHELL);try{const r=await fetch(SDK);if(r.ok)await c.put(SDK,r);}catch(x){/* offline boot does not require the SDK */}}).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{
   const r=e.request,u=new URL(r.url);
