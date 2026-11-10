@@ -20,7 +20,13 @@ Name must always be **The Chronicle**. Look: gothic, near-black, aged gold (play
 ## Status
 - Done: campaigns, accounts UI, characters (+ per-campaign progress), DM tools (party, encounter with start/end and initiative
   prompt, rolls with adv/dis, resources, log, assignments dropdown), player tabs, dice with modifiers, skills clickable.
-- Next: wire Supabase (accounts, load/save, realtime), then PWA install, then SRD content and image generator link.
+- Done (v1 cloud): Supabase wired in `index.html` (sign up / sign in / guest, load everything at login, debounced save of changed
+  characters and campaigns, realtime updates, DM password via `check_dm_password` / `set_dm_password`). Falls back to demo mode
+  when Supabase is unreachable (e.g. the Claude artifact preview) so the UI can still be tested.
+- Known limits: each campaign is one JSON row, so two people editing the same campaign in the same moment can overwrite each other
+  (last write wins). If that bites, split log / combatants / prompts into their own tables. Uploaded pictures are shrunk to 640px.
+- Supabase Auth: "Confirm email" should be OFF for signups to log in instantly (Authentication > Providers > Email). Anonymous sign-ins ON.
+- Next: PWA install, split hot data into tables if needed, SRD content, image generator link.
 
 ## Decisions
 - DM password is hashed in Supabase (`set_dm_password` / `check_dm_password`); reset link goes to the backup email.

@@ -295,6 +295,7 @@ button.ab-m:hover{color:var(--gold);background:var(--accent-soft)}
 <div id="modal"></div>
 <div id="toast" class="toast" hidden></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.js"></script>
 <script>
 (function(){
 'use strict';
@@ -502,7 +503,7 @@ const MAPS_OFF=[
 /* ---------- state ---------- */
 const S={user:{name:'Mohammed',guest:false},authMode:'signin',screen:'campaigns',filter:'all',campId:null,role:null,tab:null,
   charId:null,charTab:'info',charCamp:null,openSheet:null,modal:null,last:null,hist:[],rolling:false,rollSel:[],rollCheck:'Perception',rollKind:'skill',rollWho:'__all',logF:'all',
-  cust:{},saved:{},mode:'n',pick:{},die:20,mod:0,resCat:'mons',rollMode:'n',seen:{},slotEdit:false,spLvF:'all',openSp:{},dismiss:{},rpDone:null,toastT:0};
+  cust:{},saved:{},online:false,sync:'ok',booting:false,authErr:'',authBusy:false,mode:'n',pick:{},die:20,mod:0,resCat:'mons',rollMode:'n',seen:{},slotEdit:false,spLvF:'all',openSp:{},dismiss:{},rpDone:null,toastT:0};
 const DMTABS=[['party','Party'],['init','Encounter'],['rolls','Rolls'],['res','Resources'],['log','Log'],['settings','Settings']];
 const PTABS=[['sheet','Sheet'],['enc','Encounter'],['party','Party'],['spells','Spells'],['gear','Gear & gold'],['log','Log']];
 
@@ -571,8 +572,9 @@ function authView(){
   :`${m==='signup'?`<label class="lbl" for="a-name">Display name</label><input id="a-name" placeholder="Mohammed">`:''}
     <label class="lbl" for="a-email">Email</label><input id="a-email" type="email" placeholder="you@example.com">
     <label class="lbl" for="a-pass">Password</label><input id="a-pass" type="password" data-enter="authGo">
-    <p class="muted sm">Demo: leave the fields empty to sign in as Mohammed.</p>`}
-  <button class="btn primary" data-a="authGo">${m==='guest'?'Continue as guest':m==='signup'?'Create account':'Sign in'}</button></div></div>`;
+    ${S.online?'':'<p class="muted sm">Demo mode: leave the fields empty to sign in as Mohammed. Nothing is saved.</p>'}`}
+  ${S.authErr?`<p class="err">${esc(S.authErr)}</p>`:''}
+  <button class="btn primary" data-a="authGo" ${S.authBusy?'disabled':''}>${m==='guest'?'Continue as guest':m==='signup'?'Create account':'Sign in'}</button></div></div>`;
 }
 
 function header(){
@@ -580,15 +582,15 @@ function header(){
     const c=curCamp(),dm=S.role==='dm',mc=dm?null:myChar(c),sv=mc&&S.saved[c.id+':'+mc.id];
     return `<header class="bar-top campaign ${dm?'dm':''}"><button class="btn ghost sm" data-a="leave">← Campaigns</button>
     <div class="ct"><div class="ctitle">${esc(c.name)}</div><div class="muted sm">Session ${c.session} · DM ${esc(c.dm)}${sv?' · Saved '+sv:''}</div></div>
-    <span class="pill ${dm?'ember':'acc'}">${dm?'DM':'Player'}</span>${dm?'':'<button class="btn primary sm" data-a="savePlayer">Save progress</button>'}<button class="btn ghost sm" data-a="switchRole">Switch role</button></header>`;
+    ${syncLabel()}<span class="pill ${dm?'ember':'acc'}">${dm?'DM':'Player'}</span>${dm?'':'<button class="btn primary sm" data-a="savePlayer">Save progress</button>'}<button class="btn ghost sm" data-a="switchRole">Switch role</button></header>`;
   }
   const nav=(k,l)=>`<button class="nav-b ${S.screen===k||(k==='characters'&&S.screen==='character')?'on':''}" data-a="go" data-s="${k}">${l}</button>`;
-  return `<header class="bar-top"><div class="brand">${D20}The Chronicle</div><nav>${nav('campaigns','Campaigns')}${nav('characters','Characters')}</nav>
+  return `<header class="bar-top"><div class="brand">${D20}The Chronicle</div><nav>${nav('campaigns','Campaigns')}${nav('characters','Characters')}</nav>${syncLabel()}
   <button class="chip" data-a="signout" title="Sign out">${esc(S.user.name)}${S.user.guest?' · guest':''} · Sign out</button></header>`;
 }
 
 function campaignsView(){
-  const list=camps.filter(c=>S.filter==='all'||c.status===S.filter);
+  const me=S.user.name,list=camps.filter(c=>(S.filter==='all'||c.status===S.filter)&&(!S.online||c.dm===me||c.members.some(m=>m.player===me)||(c.visibleTo||[]).includes(me)));
   const f=(k,l)=>`<button class="chip ${S.filter===k?'on':''}" data-a="filter" data-f="${k}">${l}</button>`;
   return `<div class="page-h"><h1>Campaigns</h1><div class="row"><button class="btn" data-a="modal" data-t="joincode">Join with code</button><button class="btn primary" data-a="modal" data-t="newcamp">New campaign</button></div></div>
   <div class="filters">${f('all','All')}${f('active','Active')}${f('done','Done')}</div>
@@ -871,7 +873,7 @@ const logAdd=(c,kind,text,vis)=>{if(!c)return;c.log.unshift({id:newId('l'),t:now
 const logRoll=(c,text)=>logAdd(c,'roll',text,S.role!=='dm');
 function fixCamp(c){
   c.log=c.log||[];c.init.active=!!c.init.active;c.init.rolled=c.init.rolled||{};c.init.n=c.init.n||0;
-  if(!c.logSeed&&c.init.list.length){c.logSeed=1;c.init.active=true;c.members.forEach(m=>{c.init.rolled[m.charId]=true;});}
+  if(!c.logSeed){c.logSeed=1;if(c.init.list.length){c.init.active=true;c.members.forEach(m=>{c.init.rolled[m.charId]=true;});}}
   c.mons=c.mons||[];c.items=c.items||[];c.maps=c.maps||[];c.shows=c.shows||[];
   if(c.id==='crown'&&!c.seeded){
     c.seeded=1;
@@ -1064,19 +1066,21 @@ function modalView(){
 }
 
 const FORM_MODALS=['addres','dmpw','newcamp','joincode','newchar','addcomb','addspell','addnpc'];
-function render(){
+function render(quiet){
   const app=$('#app');
+  if(S.booting){app.innerHTML='<div class="auth"><div class="brand big">'+D20+'The Chronicle</div><p class="muted" style="text-align:center">Opening the book…</p></div>';$('#modal').innerHTML='';return;}
   if(!S.user) app.innerHTML=authView();
   else app.innerHTML=header()+(S.screen==='campaign'?'':'<div class="orn" aria-hidden="true"><span>◆</span></div>')+(S.screen==='campaign'?campaignView():S.screen==='characters'?charactersView():S.screen==='character'?characterView():campaignsView());
   let mh='';
   if(S.user&&S.modal) mh=modalView();
   else if(S.user&&S.screen==='campaign'&&S.role==='player') mh=promptModal();
   $('#modal').innerHTML=mh;
-  if(S.modal&&FORM_MODALS.includes(S.modal.t)){const f=document.querySelector('#modal input,#modal textarea');if(f)f.focus();}
+  if(!quiet&&S.modal&&FORM_MODALS.includes(S.modal.t)){const f=document.querySelector('#modal input,#modal textarea');if(f)f.focus();}
+  queueSave();
 }
 
 /* ---------- actions ---------- */
-function enterCamp(c,role){S.campId=c.id;S.role=role;S.tab=null;S.openSheet=null;S.screen='campaign';S.modal=null;S.rpDone=null;}
+function enterCamp(c,role){c.visibleTo=c.visibleTo||[];if(S.user&&!c.visibleTo.includes(S.user.name))c.visibleTo.push(S.user.name);S.campId=c.id;S.role=role;S.tab=null;S.openSheet=null;S.screen='campaign';S.modal=null;S.rpDone=null;}
 function enterPlayer(c){
   if(c.members.some(m=>m.player===S.user.name)){enterCamp(c,'player');return;}
   S.modal={t:myChars().length&&!S.user.guest?'pickchar':'newchar',camp:c.id};
@@ -1090,7 +1094,7 @@ function seat(c,ch){
 }
 function createChar(f){
   const ab=[15,14,13,12,10,8];
-  const ch={id:'c'+Date.now(),name:f.name,race:f.race,cls:f.cls,sub:f.sub||'',owner:S.user.guest?null:S.user.name,createdBy:S.user.name+(S.user.guest?' (guest)':''),created:new Date().toISOString().slice(0,10),
+  const ch={id:'c'+Date.now()+Math.floor(Math.random()*1000),ownerUid:S.user.guest?null:(S.user.uid||null),name:f.name,race:f.race,cls:f.cls,sub:f.sub||'',owner:S.user.guest?null:S.user.name,createdBy:S.user.name+(S.user.guest?' (guest)':''),created:new Date().toISOString().slice(0,10),
     age:Number(f.age)||25,height:f.h||'5\'8"',hue:rnd(360),art:null,abil:{str:ab[0],dex:ab[1],con:ab[2],int:ab[3],wis:ab[4],cha:ab[5]},ac:10,speed:30,skills:[],lore:f.lore,spells:[],prog:{}};
   chars.push(ch);return ch;
 }
@@ -1119,12 +1123,13 @@ function ctx(el){const ch=ch$(el.dataset.ch);return {ch,c:camps.find(x=>x.id===e
 const A={
   authMode(el){S.authMode=el.dataset.m;},
   authGo(){
+    if(S.online){if(S.authBusy)return false;S.authBusy=true;S.authErr='';cloudAuth();return;}
     const m=S.authMode,nm=val('a-name'),em=val('a-email');
     if(m==='guest'){if(!nm){toast('Pick a display name first.');return false;}S.user={name:nm,guest:true};}
     else{const local=em?em.split('@')[0]:'';const name=nm||(local?local[0].toUpperCase()+local.slice(1):'Mohammed');S.user={name,guest:false};}
     S.screen='campaigns';
   },
-  signout(){S.user=null;S.screen='campaigns';S.authMode='signin';S.modal=null;},
+  signout(){if(S.online&&sb){sb.auth.signOut();if(cloud.chan){sb.removeChannel(cloud.chan);cloud.chan=null;}chars.length=0;camps.length=0;cloud.known={};cloud.saved={};cloud.loaded=false;}S.user=null;S.screen='campaigns';S.authMode='signin';S.modal=null;},
   go(el){S.screen=el.dataset.s;S.modal=null;},
   filter(el){S.filter=el.dataset.f;},
   modal(el){S.modal={t:el.dataset.t,camp:S.campId,ch:el.dataset.ch,cat:el.dataset.cat,q:'',lv:'all',mine:false};},
@@ -1133,15 +1138,26 @@ const A={
   openCamp(el){S.modal={t:'role',camp:el.dataset.id};},
   roleDM(){S.modal={t:'dmpw',camp:S.modal.camp};},
   rolePlayer(){enterPlayer(camps.find(x=>x.id===S.modal.camp));},
-  dmpwGo(){const c=camps.find(x=>x.id===S.modal.camp);if(val('m-pw')===c.pw)enterCamp(c,'dm');else S.modal.err='That password does not match.';},
+  dmpwGo(){
+    const c=camps.find(x=>x.id===S.modal.camp),pw=val('m-pw');
+    if(S.online){
+      const m=S.modal;m.err='';
+      sb.rpc('check_dm_password',{camp:c.id,pw}).then(r=>{
+        if(S.modal!==m)return;
+        if(!r.error&&r.data===true)enterCamp(c,'dm');else m.err=r.error?'Could not check the password. Try again.':'That password does not match.';
+        render();
+      });return false;
+    }
+    if(pw===c.pw)enterCamp(c,'dm');else S.modal.err='That password does not match.';
+  },
   newcampGo(){
     const n=val('m-name'),pw=val('m-pw'),em=val('m-em');
     if(!n||!pw||!em){S.modal.err='Add a name, a password and a backup email.';return;}
     if(!/^\S+@\S+\.\S+$/.test(em)){S.modal.err='That email does not look right.';return;}
     const c={id:'k'+Date.now(),name:n,session:1,dm:S.user.name,status:'active',code:genCode(n),pw,members:[],npcs:[],init:{round:1,turn:0,list:[]},prompts:[],ctrl:{}};fixCamp(c);
-    camps.unshift(c);enterCamp(c,'dm');S.tab='settings';toast('Created. Your join code is '+c.code);
+    camps.unshift(c);if(S.online)dbCreateCamp(c,pw,em);enterCamp(c,'dm');S.tab='settings';toast('Created. Your join code is '+c.code);
   },
-  joinGo(){const code=val('m-code').toUpperCase(),c=camps.find(x=>x.code===code);if(!c){S.modal.err='No campaign has that code. Demo: CROWN-4821';return;}S.modal={t:'role',camp:c.id};},
+  joinGo(){const code=val('m-code').toUpperCase(),c=camps.find(x=>x.code===code);if(!c){S.modal.err='No campaign has that code.'+(S.online?'':' Demo: CROWN-4821')+'';return;}S.modal={t:'role',camp:c.id};},
   pickGo(el){
     const c=camps.find(x=>x.id===S.modal.camp),ch=ch$(el.dataset.id),inside=S.screen==='campaign'&&S.campId===c.id;
     seat(c,ch);S.modal=null;if(!inside)enterCamp(c,'player');toast('Now playing '+ch.name+'.');
@@ -1357,7 +1373,9 @@ const A={
   setPw(){
     const pw=val('np'),em=val('ne');
     if(!pw||!/^\S+@\S+\.\S+$/.test(em)){toast('Enter a new password and a valid backup email.');return false;}
-    curCamp().pw=pw;toast('Saved. A reset link would go to '+em+'.');
+    const c=curCamp();
+    if(S.online){sb.rpc('set_dm_password',{camp:c.id,pw,email:em}).then(r=>toast(r.error?'Could not save the password.':'Saved. Your backup email is '+em+'.'));return false;}
+    c.pw=pw;toast('Saved. A reset link would go to '+em+'.');
   }
 };
 
@@ -1390,8 +1408,8 @@ const C={
   },
   art(el){
     const f=el.files&&el.files[0];if(!f)return false;
-    const r=new FileReader(),ch=ch$(el.dataset.ch);
-    r.onload=()=>{ch.art=r.result;render();toast('Artwork updated.');};r.readAsDataURL(f);return false;
+    const ch=ch$(el.dataset.ch);
+    readImg(f,u=>{ch.art=u;render();toast('Artwork updated.');});return false;
   },
   coin(el,v){const {p}=ctx(el);p.money[el.dataset.k]=Math.max(0,Math.floor(Number(v))||0);},
   gearEq(el){const {p}=ctx(el);p.gear[el.dataset.i].eq=el.checked?1:0;},
@@ -1403,16 +1421,16 @@ const C={
   rollWho(el,v){S.rollWho=v;return false;},
   gearDesc(el,v){const {p}=ctx(el);p.gear[el.dataset.i].d=v;return false;},
   gearArt(el){
-    const f=el.files&&el.files[0];if(!f)return false;const {p}=ctx(el),g=p.gear[el.dataset.i],r=new FileReader();
-    r.onload=()=>{g.art=r.result;render();};r.readAsDataURL(f);return false;
+    const f=el.files&&el.files[0];if(!f)return false;const {p}=ctx(el),g=p.gear[el.dataset.i];
+    readImg(f,u=>{g.art=u;render();});return false;
   },
   resArt(el){
-    const f=el.files&&el.files[0];if(!f)return false;const rec=resRec(S.modal,curCamp()),r=new FileReader();
-    r.onload=()=>{rec.art=r.result;render();};r.readAsDataURL(f);return false;
+    const f=el.files&&el.files[0];if(!f)return false;const rec=resRec(S.modal,curCamp());
+    readImg(f,u=>{rec.art=u;render();});return false;
   },
   addArt(el){
-    const f=el.files&&el.files[0];if(!f)return false;const m=S.modal,r=new FileReader();
-    r.onload=()=>{m.art=r.result;const t=document.getElementById('m-art-st');if(t)t.textContent='Picture attached.';};r.readAsDataURL(f);return false;
+    const f=el.files&&el.files[0];if(!f)return false;const m=S.modal;
+    readImg(f,u=>{m.art=u;const t=document.getElementById('m-art-st');if(t)t.textContent='Picture attached.';});return false;
   }
 };
 
@@ -1433,7 +1451,158 @@ document.addEventListener('keydown',e=>{
   }
   if(e.key==='Escape'&&S.modal){S.modal=null;render();}
 });
+/* ---------- cloud sync (Supabase). Falls back to demo mode when unreachable ---------- */
+const SB_URL='https://czxfcqkevfixcmsrfbxq.supabase.co',SB_KEY='sb_publishable_RjJv8eN4hzaqmwPklFb48A_kqTxw1Wm';
+let sb=null;const cloud={known:{},saved:{},timer:0,busy:false,chan:null,loaded:false};
+const canon=o=>JSON.stringify(o,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((a,x)=>(a[x]=v[x],a),{}):v);
+const strip=o=>{const c=JSON.parse(JSON.stringify(o));delete c.pw;return c;};
+const syncLabel=()=>!S.online?'':S.sync==='err'?'<span class="tag" style="color:var(--bad)" title="Changes are kept here and retried">Not saved</span>':S.sync==='saving'?'<span class="tag">Saving…</span>':'<span class="tag" style="color:var(--good)">Synced</span>';
+
+/* shrink uploaded pictures so rows stay small */
+function readImg(file,cb){
+  const fr=new FileReader();
+  fr.onload=()=>{
+    const im=new Image();
+    im.onload=()=>{
+      const m=640,k=Math.min(1,m/Math.max(im.width,im.height)),cv=document.createElement('canvas');
+      cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);
+      const g=cv.getContext('2d');g.drawImage(im,0,0,cv.width,cv.height);
+      cb(cv.toDataURL('image/jpeg',0.82));
+    };
+    im.onerror=()=>cb(fr.result);im.src=fr.result;
+  };
+  fr.readAsDataURL(file);
+}
+
+async function reachable(){
+  try{
+    const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),4000);
+    const r=await fetch(SB_URL+'/auth/v1/health',{headers:{apikey:SB_KEY},signal:ctl.signal});clearTimeout(t);return r.ok;
+  }catch(e){return false;}
+}
+async function loadAll(){
+  const [a,b]=await Promise.all([sb.from('characters').select('data'),sb.from('campaigns').select('id,code,name,dm_name,data')]);
+  if(a.error)throw a.error;if(b.error)throw b.error;
+  chars.length=0;camps.length=0;cloud.known={};cloud.saved={};
+  a.data.forEach(r=>{chars.push(r.data);cloud.known['c:'+r.data.id]=1;cloud.saved['c:'+r.data.id]=canon(r.data);});
+  b.data.forEach(r=>{const c=r.data;c.id=r.id;c.code=r.code;c.name=r.name;c.dm=r.dm_name;fixCamp(c);camps.push(c);cloud.known['k:'+c.id]=1;cloud.saved['k:'+c.id]=canon(strip(c));});
+  cloud.loaded=true;
+}
+function queueSave(){
+  if(!S.online||!cloud.loaded||!S.user)return;
+  clearTimeout(cloud.timer);cloud.timer=setTimeout(flush,400);
+}
+async function flush(){
+  if(cloud.busy){cloud.timer=setTimeout(flush,400);return;}
+  cloud.busy=true;let wrote=false,failed=false;
+  try{
+    for(const ch of [...chars]){
+      const key='c:'+ch.id,j=canon(ch);if(cloud.saved[key]===j)continue;
+      S.sync='saving';wrote=true;
+      const row={id:ch.id,owner_id:ch.ownerUid||null,created_by:ch.createdBy||null,data:JSON.parse(JSON.stringify(ch))};
+      const r=await sb.from('characters').upsert(row);
+      if(r.error){failed=true;console.warn(r.error);}else{cloud.saved[key]=j;cloud.known[key]=1;}
+    }
+    for(const c of [...camps]){
+      const key='k:'+c.id;if(!cloud.known[key])continue;
+      const d=strip(c),j=canon(d);if(cloud.saved[key]===j)continue;
+      S.sync='saving';wrote=true;
+      const r=await sb.from('campaigns').update({name:c.name,code:c.code,dm_name:c.dm,data:d}).eq('id',c.id);
+      if(r.error){failed=true;console.warn(r.error);}else cloud.saved[key]=j;
+    }
+    for(const key of Object.keys(cloud.known)){
+      const id=key.slice(2),gone=key[0]==='c'?!chars.some(x=>x.id===id):!camps.some(x=>x.id===id);
+      if(!gone)continue;wrote=true;
+      const r=await sb.from(key[0]==='c'?'characters':'campaigns').delete().eq('id',id);
+      if(r.error)failed=true;else{delete cloud.known[key];delete cloud.saved[key];}
+    }
+    S.sync=failed?'err':'ok';
+  }catch(e){console.warn(e);S.sync='err';failed=true;}
+  cloud.busy=false;
+  if(failed)cloud.timer=setTimeout(flush,5000);
+  if(wrote)softRender();
+}
+async function dbCreateCamp(c,pw,email){
+  try{
+    const d=strip(c);
+    let r=await sb.from('campaigns').insert({id:c.id,code:c.code,name:c.name,dm_id:S.user.uid,dm_name:c.dm,dm_email:email,dm_pw_hash:'pending',data:d});
+    if(r.error)throw r.error;
+    r=await sb.rpc('set_dm_password',{camp:c.id,pw,email});if(r.error)throw r.error;
+    cloud.known['k:'+c.id]=1;cloud.saved['k:'+c.id]=canon(d);delete c.pw;S.sync='ok';
+  }catch(e){console.warn(e);S.sync='err';toast('Could not save the campaign online. Check your connection.');}
+  softRender();
+}
+function softRender(){
+  const a=document.activeElement;
+  if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&a.closest&&a.closest('#app,#modal')){clearTimeout(cloud.soft);cloud.soft=setTimeout(softRender,1500);return;}
+  render(true);
+}
+function applyRemote(table,type,row,old){
+  const isC=table==='characters',arr=isC?chars:camps,key=(isC?'c:':'k:');
+  if(type==='DELETE'){
+    const id=old&&old.id;if(!id)return;const i=arr.findIndex(x=>x.id===id);
+    if(i>=0){arr.splice(i,1);delete cloud.known[key+id];delete cloud.saved[key+id];
+      if(!isC&&S.campId===id){S.screen='campaigns';S.campId=null;S.role=null;toast('That campaign was deleted.');}softRender();}
+    return;
+  }
+  const d=row.data;if(!d)return;
+  if(!isC){d.id=row.id;d.code=row.code;d.name=row.name;d.dm=row.dm_name;fixCamp(d);}
+  const k=key+(isC?d.id:row.id),i=arr.findIndex(x=>x.id===(isC?d.id:row.id)),cj=canon(isC?d:strip(d));
+  if(cloud.saved[k]===cj)return;
+  if(i>=0){const local=canon(isC?arr[i]:strip(arr[i]));if(local!==cloud.saved[k])return;arr[i]=d;}else arr.push(d);
+  cloud.saved[k]=cj;cloud.known[k]=1;softRender();
+}
+function subscribe(){
+  if(cloud.chan)sb.removeChannel(cloud.chan);
+  cloud.chan=sb.channel('chronicle').on('postgres_changes',{event:'*',schema:'public',table:'characters'},p=>applyRemote('characters',p.eventType,p.new,p.old))
+    .on('postgres_changes',{event:'*',schema:'public',table:'campaigns'},p=>applyRemote('campaigns',p.eventType,p.new,p.old)).subscribe();
+}
+async function startSession(user,fallbackName){
+  const uid=user.id;
+  let name=fallbackName;
+  const pr=await sb.from('profiles').select('name').eq('id',uid).maybeSingle();
+  if(pr.data&&pr.data.name)name=pr.data.name;
+  else if(name){await sb.from('profiles').upsert({id:uid,name});}
+  if(!name)name=(user.email||'Player').split('@')[0];
+  S.user={name,guest:!!user.is_anonymous,uid};
+  await loadAll();subscribe();S.sync='ok';S.screen='campaigns';
+}
+async function boot(){
+  if(typeof window.supabase==='undefined'||!(await reachable())){S.booting=false;render();return;}
+  try{
+    sb=window.supabase.createClient(SB_URL,SB_KEY);S.online=true;
+    const {data}=await sb.auth.getSession();
+    if(data&&data.session)await startSession(data.session.user);
+    else{S.user=null;}
+  }catch(e){console.warn(e);S.user=null;S.authErr='Could not load your data. Try again.';}
+  S.booting=false;render();
+}
+async function cloudAuth(){
+  const m=S.authMode,nm=val('a-name'),em=val('a-email'),pw=val('a-pass');
+  S.authErr='';
+  try{
+    if(m==='guest'){
+      if(!nm){S.authErr='Pick a display name first.';return;}
+      const r=await sb.auth.signInAnonymously();if(r.error)throw r.error;
+      await startSession(r.data.user,nm);
+    }else{
+      if(!em||!pw){S.authErr='Enter your email and a password.';return;}
+      if(m==='signup'){
+        if(!nm){S.authErr='Pick a display name.';return;}
+        if(pw.length<6){S.authErr='Use at least 6 characters for the password.';return;}
+        const r=await sb.auth.signUp({email:em,password:pw});if(r.error)throw r.error;
+        if(!r.data.session){S.authErr='Account created. Check your email to confirm it, then sign in.';S.authMode='signin';return;}
+        await startSession(r.data.user,nm);
+      }else{
+        const r=await sb.auth.signInWithPassword({email:em,password:pw});if(r.error)throw r.error;
+        await startSession(r.data.user,'');
+      }
+    }
+  }catch(e){S.user=null;S.authErr=e&&e.message?e.message:'Something went wrong.';}
+  finally{S.authBusy=false;render();}
+}
+
 camps.forEach(fixCamp);
-render();
+if(typeof window.supabase==='undefined'){S.booting=false;render();}else{S.booting=true;render();boot();}
 })();
 </script>
