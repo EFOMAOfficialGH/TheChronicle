@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Chronicle">
+<meta name="apple-mobile-web-app-title" content="The Chronicle">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>The Chronicle</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -340,6 +340,8 @@ button.ab-m:hover{color:var(--gold);background:var(--accent-soft)}
   input,select,textarea{font-size:19px;min-height:48px}
   .nm{font-size:20px}
 }
+.brand img.logo{width:36px;height:36px;border-radius:9px;flex:none;box-shadow:0 0 0 1px var(--line-soft)}
+.brand.big img.logo{width:104px;height:104px;border-radius:24px}
 </style>
 <style>html{color-scheme:dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
 </head>
@@ -354,7 +356,7 @@ button.ab-m:hover{color:var(--gold);background:var(--accent-soft)}
 (function(){
 'use strict';
 const $=s=>document.querySelector(s);
-const D20='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M12 2 21 7v10l-9 5-9-5V7Z"/><path d="M12 6l5.5 9.5h-11Z"/><path d="M12 6 3 7M12 6l9 1M17.5 15.5 21 17M17.5 15.5 12 22M6.5 15.5 3 17M6.5 15.5 12 22"/></svg>';
+const D20='<img class="logo" src="icons/icon-192.png" alt="" width="36" height="36">';
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const mod=s=>Math.floor((s-10)/2);
 const sg=n=>n>=0?'+'+n:''+n;
