@@ -21,8 +21,7 @@ Name must always be **The Chronicle**. Look: gothic, near-black, aged gold (play
 - Done: campaigns, accounts UI, characters (+ per-campaign progress), DM tools (party, encounter with start/end and initiative
   prompt, rolls with adv/dis, resources, log, assignments dropdown), player tabs, dice with modifiers, skills clickable.
 - Done (v1 cloud): Supabase wired in `index.html` (sign up / sign in / guest, load everything at login, debounced save of changed
-  characters and campaigns, realtime updates, DM password via `check_dm_password` / `set_dm_password`). Falls back to demo mode
-  when Supabase is unreachable (e.g. the Claude artifact preview) so the UI can still be tested.
+  characters and campaigns, realtime updates, DM password via `check_dm_password` / `set_dm_password`). Demo data only loads with `?demo=1` on the URL (for testing the UI). On the real site an unreachable server shows an error screen, never demo data.
 - Known limits: each campaign is one JSON row, so two people editing the same campaign in the same moment can overwrite each other
   (last write wins). If that bites, split log / combatants / prompts into their own tables. Uploaded pictures are shrunk to 640px.
 - Supabase Auth: "Confirm email" should be OFF for signups to log in instantly (Authentication > Providers > Email). Anonymous sign-ins ON.

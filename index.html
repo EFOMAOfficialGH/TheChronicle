@@ -559,7 +559,7 @@ const MAPS_OFF=[
 /* ---------- state ---------- */
 const S={user:{name:'Mohammed',guest:false},authMode:'signin',screen:'campaigns',filter:'all',campId:null,role:null,tab:null,
   charId:null,charTab:'info',charCamp:null,openSheet:null,modal:null,last:null,hist:[],rolling:false,rollSel:[],rollCheck:'Perception',rollKind:'skill',rollWho:'__all',logF:'all',
-  cust:{},saved:{},online:false,trayOpen:false,sync:'ok',booting:false,authErr:'',authBusy:false,mode:'n',pick:{},die:20,mod:0,resCat:'mons',rollMode:'n',seen:{},slotEdit:false,spLvF:'all',openSp:{},dismiss:{},rpDone:null,toastT:0};
+  cust:{},saved:{},online:false,fatal:'',trayOpen:false,sync:'ok',booting:false,authErr:'',authBusy:false,mode:'n',pick:{},die:20,mod:0,resCat:'mons',rollMode:'n',seen:{},slotEdit:false,spLvF:'all',openSp:{},dismiss:{},rpDone:null,toastT:0};
 const DMTABS=[['party','Party'],['init','Encounter'],['rolls','Rolls'],['res','Resources'],['log','Log'],['settings','Settings']];
 const PTABS=[['sheet','Sheet'],['enc','Encounter'],['party','Party'],['spells','Spells'],['gear','Gear'],['log','Log']];
 
@@ -1132,6 +1132,7 @@ function fitTabs(){
 function render(quiet){
   const app=$('#app');
   if(S.booting){app.innerHTML='<div class="auth"><div class="brand big">'+D20+'The Chronicle</div><p class="muted" style="text-align:center">Opening the book…</p></div>';$('#modal').innerHTML='';return;}
+  if(S.fatal){app.innerHTML='<div class="auth"><div class="brand big">'+D20+'The Chronicle</div><p class="err" style="text-align:center">'+esc(S.fatal)+'</p><button class="btn primary" data-a="retry">Try again</button></div>';$('#modal').innerHTML='';return;}
   if(!S.user) app.innerHTML=authView();
   else app.innerHTML=header()+(S.screen==='campaign'?'':'<div class="orn" aria-hidden="true"><span>◆</span></div>')+(S.screen==='campaign'?campaignView():S.screen==='characters'?charactersView():S.screen==='character'?characterView():campaignsView());
   let mh='';
@@ -1236,6 +1237,7 @@ const A={
     else{S.modal=null;S.screen='character';S.charId=ch.id;S.charTab='info';}
   },
   leave(){S.screen='campaigns';S.campId=null;S.role=null;S.rpDone=null;},
+  retry(){location.reload();return false;},
   trayTog(){S.trayOpen=!S.trayOpen;},
   pickCtl(el){S.pick[S.campId]=el.dataset.id;},
   switchRole(){S.modal={t:'role',camp:S.campId};},
@@ -1516,7 +1518,9 @@ document.addEventListener('keydown',e=>{
   }
   if(e.key==='Escape'&&S.modal){S.modal=null;render();}
 });
-/* ---------- cloud sync (Supabase). Falls back to demo mode when unreachable ---------- */
+/* ---------- cloud sync (Supabase). Demo data only exists with ?demo=1 (or in the test harness) ---------- */
+const DEMO=typeof location==='undefined'||/[?&]demo=1/.test(location.search);
+if(!DEMO){chars.length=0;camps.length=0;S.user=null;}
 const SB_URL='https://czxfcqkevfixcmsrfbxq.supabase.co',SB_KEY='sb_publishable_RjJv8eN4hzaqmwPklFb48A_kqTxw1Wm';
 let sb=null;const cloud={known:{},saved:{},timer:0,busy:false,chan:null,loaded:false};
 const canon=o=>JSON.stringify(o,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((a,x)=>(a[x]=v[x],a),{}):v);
@@ -1542,7 +1546,7 @@ function readImg(file,cb){
 async function reachable(){
   try{
     const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),4000);
-    const r=await fetch(SB_URL+'/auth/v1/health',{headers:{apikey:SB_KEY},signal:ctl.signal});clearTimeout(t);return r.ok;
+    await fetch(SB_URL+'/auth/v1/health',{headers:{apikey:SB_KEY},signal:ctl.signal});clearTimeout(t);return true;
   }catch(e){return false;}
 }
 async function loadAll(){
@@ -1633,7 +1637,8 @@ async function startSession(user,fallbackName){
   await loadAll();subscribe();S.sync='ok';S.screen='campaigns';
 }
 async function boot(){
-  if(typeof window.supabase==='undefined'||!(await reachable())){S.booting=false;render();return;}
+  if(typeof window.supabase==='undefined'){S.booting=false;S.fatal='The connection library did not load. Check your internet and try again.';render();return;}
+  if(!(await reachable())){S.booting=false;S.fatal='Could not reach the server. Check your internet and try again.';render();return;}
   try{
     sb=window.supabase.createClient(SB_URL,SB_KEY);S.online=true;
     const {data}=await sb.auth.getSession();
@@ -1668,7 +1673,7 @@ async function cloudAuth(){
 }
 
 camps.forEach(fixCamp);
-if(typeof window.supabase==='undefined'){S.booting=false;render();}else{S.booting=true;render();boot();}
+if(DEMO){S.booting=false;render();}else{S.booting=true;render();boot();}
 })();
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}catch(e){}
 </script>
