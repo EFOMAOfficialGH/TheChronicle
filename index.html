@@ -289,6 +289,25 @@ button.ab-m:hover{color:var(--gold);background:var(--accent-soft)}
 .tag.adv{color:var(--good)}.tag.dis{color:var(--bad)}
 .last .sm{display:block}
 .card.wide{width:min(620px,100%)}
+
+/* ---- phone layout pass ---- */
+.bar-top.campaign{gap:8px 10px}
+.hact{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%}
+.traybtn{display:flex;justify-content:space-between;align-items:center;width:100%;padding:14px 16px;cursor:pointer;color:inherit;font:inherit;text-align:left}
+.traybtns{display:grid;grid-template-columns:1.1fr 1fr 1.2fr;gap:8px}
+.traybtns .btn{min-width:0;padding-inline:8px}
+.modebar .muted{flex-basis:100%}
+@media (min-width:700px){.hact{width:auto}}
+@media (max-width:520px){
+  .hide-sm{display:none}
+  .ctitle{font-size:19px}
+  .stats{grid-template-columns:repeat(4,1fr);gap:6px}
+  .stat{padding:8px 2px}.stat .v{font-size:19px}.stat .k{font-size:9px;letter-spacing:.02em}
+  .traybtns .btn{font-size:11px;letter-spacing:.03em;padding:10px 4px}
+  .tabs.ov{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent)}
+  .tab{padding:10px 12px;font-size:13px;letter-spacing:.04em}
+  .chip{padding-inline:10px}
+}
 </style>
 
 <div id="app" class="wrap"></div>
@@ -503,9 +522,9 @@ const MAPS_OFF=[
 /* ---------- state ---------- */
 const S={user:{name:'Mohammed',guest:false},authMode:'signin',screen:'campaigns',filter:'all',campId:null,role:null,tab:null,
   charId:null,charTab:'info',charCamp:null,openSheet:null,modal:null,last:null,hist:[],rolling:false,rollSel:[],rollCheck:'Perception',rollKind:'skill',rollWho:'__all',logF:'all',
-  cust:{},saved:{},online:false,sync:'ok',booting:false,authErr:'',authBusy:false,mode:'n',pick:{},die:20,mod:0,resCat:'mons',rollMode:'n',seen:{},slotEdit:false,spLvF:'all',openSp:{},dismiss:{},rpDone:null,toastT:0};
+  cust:{},saved:{},online:false,trayOpen:false,sync:'ok',booting:false,authErr:'',authBusy:false,mode:'n',pick:{},die:20,mod:0,resCat:'mons',rollMode:'n',seen:{},slotEdit:false,spLvF:'all',openSp:{},dismiss:{},rpDone:null,toastT:0};
 const DMTABS=[['party','Party'],['init','Encounter'],['rolls','Rolls'],['res','Resources'],['log','Log'],['settings','Settings']];
-const PTABS=[['sheet','Sheet'],['enc','Encounter'],['party','Party'],['spells','Spells'],['gear','Gear & gold'],['log','Log']];
+const PTABS=[['sheet','Sheet'],['enc','Encounter'],['party','Party'],['spells','Spells'],['gear','Gear'],['log','Log']];
 
 const curCamp=()=>camps.find(c=>c.id===S.campId);
 const ch$=id=>chars.find(x=>x.id===id);
@@ -580,9 +599,10 @@ function authView(){
 function header(){
   if(S.screen==='campaign'){
     const c=curCamp(),dm=S.role==='dm',mc=dm?null:myChar(c),sv=mc&&S.saved[c.id+':'+mc.id];
-    return `<header class="bar-top campaign ${dm?'dm':''}"><button class="btn ghost sm" data-a="leave">← Campaigns</button>
+    return `<header class="bar-top campaign ${dm?'dm':''}"><button class="btn ghost sm" data-a="leave" aria-label="Back to campaigns">←<span class="hide-sm"> Campaigns</span></button>
     <div class="ct"><div class="ctitle">${esc(c.name)}</div><div class="muted sm">Session ${c.session} · DM ${esc(c.dm)}${sv?' · Saved '+sv:''}</div></div>
-    ${syncLabel()}<span class="pill ${dm?'ember':'acc'}">${dm?'DM':'Player'}</span>${dm?'':'<button class="btn primary sm" data-a="savePlayer">Save progress</button>'}<button class="btn ghost sm" data-a="switchRole">Switch role</button></header>`;
+    <span class="pill ${dm?'ember':'acc'}">${dm?'DM':'Player'}</span>
+    <div class="hact">${syncLabel()}${dm?'':'<button class="btn primary sm" data-a="savePlayer">Save progress</button>'}<button class="btn ghost sm" data-a="switchRole">Switch role</button></div></header>`;
   }
   const nav=(k,l)=>`<button class="nav-b ${S.screen===k||(k==='characters'&&S.screen==='character')?'on':''}" data-a="go" data-s="${k}">${l}</button>`;
   return `<header class="bar-top"><div class="brand">${D20}The Chronicle</div><nav>${nav('campaigns','Campaigns')}${nav('characters','Characters')}</nav>${syncLabel()}
@@ -715,13 +735,14 @@ function sheet(ch,c,dm){
   <div class="sec"><h3>Skills</h3><div class="card"><div class="skills">${skills}</div></div></div>${edit}`;
 }
 
-function tray(){
+function tray(compact){
+  if(compact&&!S.trayOpen)return `<button class="card traybtn" data-a="trayTog"><b>Dice roller</b><span class="muted mono">${S.last?'last: '+S.last.t:'tap to open'}</span></button>`;
   const dice=[4,6,8,10,12,20,100],L=S.last;
   const det=L?`d${L.d}${L.phys?' real':''}${L.mode&&L.mode!=='n'?' '+MODE[L.mode].toLowerCase():''} · ${L.v.join(' / ')}${L.mod?' '+sg(L.mod):''}`:'';
-  return `<div class="card stack"><div class="row between"><div class="dice">${dice.map(d=>`<button class="chip die-c ${S.die===d?'on':''}" data-a="dieSel" data-d="${d}">d${d}</button>`).join('')}</div>
+  return `<div class="card stack">${compact?'<div class="row between"><b>Dice roller</b><button class="btn xs ghost" data-a="trayTog">Hide</button></div>':''}<div class="row between"><div class="dice">${dice.map(d=>`<button class="chip die-c ${S.die===d?'on':''}" data-a="dieSel" data-d="${d}">d${d}</button>`).join('')}</div>
   <div><div class="last ${L&&L.d===20&&L.k===20?'res n20':''}" id="tray-num" aria-live="polite">${L?L.t:'—'}</div><span class="muted sm mono" id="tray-det">${det}</span></div></div>
   <div class="row"><span class="lbl">Modifier</span><button class="btn xs" data-a="modD" data-d="-1" aria-label="Lower modifier">−</button><b class="mono modv">${sg(S.mod)}</b><button class="btn xs" data-a="modD" data-d="1" aria-label="Raise modifier">+</button><button class="btn xs ghost" data-a="modD" data-d="0">Reset</button></div>
-  <div class="row"><button class="btn primary grow" data-a="roll" data-m="n">Roll d${S.die}</button><button class="btn grow" data-a="roll" data-m="a">Advantage</button><button class="btn grow" data-a="roll" data-m="d">Disadvantage</button></div>
+  <div class="traybtns"><button class="btn primary" data-a="roll" data-m="n">Roll d${S.die}</button><button class="btn" data-a="roll" data-m="a">Advantage</button><button class="btn" data-a="roll" data-m="d">Disadvantage</button></div>
   <div class="divider">or log a real roll</div>
   <div class="row"><select id="phys-d" style="width:auto" aria-label="Die type">${dice.map(d=>`<option value="${d}" ${d===20?'selected':''}>d${d}</option>`).join('')}</select><input id="phys-v" class="in-sm" type="number" min="1" placeholder="Result" data-enter="physLog" aria-label="Result on the die"><button class="btn sm" data-a="physLog">Log my roll</button></div>
   ${S.hist.length?`<div class="hist"><span>Recent</span>${S.hist.map(h=>`<span>${h.t!=null?h.t:h.v} (d${h.d}${h.mode&&h.mode!=='n'?(h.mode==='a'?' adv':' dis'):''}${h.phys?' real':''})</span>`).join('')}</div>`:''}</div>`;
@@ -778,7 +799,7 @@ function playerBody(c){
   if(!ch) return empty('The DM is holding your character right now.');
   const borrowed=ownerOf(c,ch.id)!==S.user.name;
   const note=borrowed?`<div class="note ember">You are controlling <b>${esc(ch.name)}</b> for now. The DM can end this at any time, and it does not change who owns the character.</div>`:'';
-  if(S.tab==='sheet') return `${note}${switcher(c,ch)}<div class="row between" style="margin-bottom:12px"><span class="muted sm">Playing ${esc(ch.name)}</span><button class="btn sm" data-a="switchChar">Switch or create character</button></div>${tray()}<div style="margin-top:6px">${sheet(ch,c,false)}</div>`;
+  if(S.tab==='sheet') return `${note}${switcher(c,ch)}<div class="row between" style="margin-bottom:12px"><span class="muted sm">Playing ${esc(ch.name)}</span><button class="btn sm" data-a="switchChar">Switch or create character</button></div>${tray(true)}<div style="margin-top:6px">${sheet(ch,c,false)}</div>`;
   if(S.tab==='spells') return `${note}${switcher(c,ch)}${slotCard(ch,c)}<div class="card sec">${spellList(ch,true,c)}</div>`;
   if(S.tab==='gear') return `${note}${switcher(c,ch)}${gearView(ch,c)}`;
   return '';
@@ -1066,6 +1087,11 @@ function modalView(){
 }
 
 const FORM_MODALS=['addres','dmpw','newcamp','joincode','newchar','addcomb','addspell','addnpc'];
+function fitTabs(){
+  const t=document.querySelector('.tabs');if(!t||!t.clientWidth)return;
+  t.classList.toggle('ov',t.scrollWidth>t.clientWidth+4);
+  const on=t.querySelector('.tab.on');if(on)t.scrollLeft=Math.max(0,on.offsetLeft-(t.clientWidth-on.clientWidth)/2);
+}
 function render(quiet){
   const app=$('#app');
   if(S.booting){app.innerHTML='<div class="auth"><div class="brand big">'+D20+'The Chronicle</div><p class="muted" style="text-align:center">Opening the book…</p></div>';$('#modal').innerHTML='';return;}
@@ -1076,6 +1102,7 @@ function render(quiet){
   else if(S.user&&S.screen==='campaign'&&S.role==='player') mh=promptModal();
   $('#modal').innerHTML=mh;
   if(!quiet&&S.modal&&FORM_MODALS.includes(S.modal.t)){const f=document.querySelector('#modal input,#modal textarea');if(f)f.focus();}
+  fitTabs();
   queueSave();
 }
 
@@ -1172,6 +1199,7 @@ const A={
     else{S.modal=null;S.screen='character';S.charId=ch.id;S.charTab='info';}
   },
   leave(){S.screen='campaigns';S.campId=null;S.role=null;S.rpDone=null;},
+  trayTog(){S.trayOpen=!S.trayOpen;},
   pickCtl(el){S.pick[S.campId]=el.dataset.id;},
   switchRole(){S.modal={t:'role',camp:S.campId};},
   switchChar(){S.modal={t:S.user.guest?'newchar':'pickchar',camp:S.campId};},
