@@ -26,7 +26,8 @@ Name must always be **The Chronicle**. Look: gothic, near-black, aged gold (play
 - Known limits: each campaign is one JSON row, so two people editing the same campaign in the same moment can overwrite each other
   (last write wins). If that bites, split log / combatants / prompts into their own tables. Uploaded pictures are shrunk to 640px.
 - Supabase Auth: "Confirm email" should be OFF for signups to log in instantly (Authentication > Providers > Email). Anonymous sign-ins ON.
-- Next: PWA install, split hot data into tables if needed, SRD content, image generator link.
+- Done: PWA (manifest.webmanifest, sw.js, icons/). The service worker is network-first for the page so new commits show quickly; bump `V` in sw.js if caching ever gets stuck.
+- Next: split hot data into tables if needed, SRD content, image generator link.
 
 ## Decisions
 - DM password is hashed in Supabase (`set_dm_password` / `check_dm_password`); reset link goes to the backup email.

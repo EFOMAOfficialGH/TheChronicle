@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0A0808">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Chronicle">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>The Chronicle</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1512,7 +1519,7 @@ const SB_URL='https://czxfcqkevfixcmsrfbxq.supabase.co',SB_KEY='sb_publishable_R
 let sb=null;const cloud={known:{},saved:{},timer:0,busy:false,chan:null,loaded:false};
 const canon=o=>JSON.stringify(o,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((a,x)=>(a[x]=v[x],a),{}):v);
 const strip=o=>{const c=JSON.parse(JSON.stringify(o));delete c.pw;return c;};
-const syncLabel=()=>!S.online?'':S.sync==='err'?'<span class="tag" style="color:var(--bad)" title="Changes are kept here and retried">Not saved</span>':S.sync==='saving'?'<span class="tag">Saving…</span>':'<span class="tag" style="color:var(--good)">Synced</span>';
+const syncLabel=()=>!S.online?'<span class="tag" title="Not connected to the online database. Nothing is saved.">Demo · not saved</span>':S.sync==='err'?'<span class="tag" style="color:var(--bad)" title="Changes are kept here and retried">Not saved</span>':S.sync==='saving'?'<span class="tag">Saving…</span>':'<span class="tag" style="color:var(--good)">Synced</span>';
 
 /* shrink uploaded pictures so rows stay small */
 function readImg(file,cb){
@@ -1661,6 +1668,7 @@ async function cloudAuth(){
 camps.forEach(fixCamp);
 if(typeof window.supabase==='undefined'){S.booting=false;render();}else{S.booting=true;render();boot();}
 })();
+try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}catch(e){}
 </script>
 </body>
 </html>
