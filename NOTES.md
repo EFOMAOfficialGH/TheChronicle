@@ -32,3 +32,5 @@ Name must always be **The Chronicle**. Look: gothic, near-black, aged gold (play
 - DM password is hashed in Supabase (`set_dm_password` / `check_dm_password`); reset link goes to the backup email.
 - Guest characters are held by the DM and can be handed over to an account later.
 - Temporary control swaps never change ownership and never show in a player's Characters tab.
+
+- Themes: tap the logo to cycle (circular reveal), hold it for the list. To add one, add an entry to `THEMES` and a `:root[data-skin="id"]` token block in the CSS.

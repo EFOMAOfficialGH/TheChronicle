@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0A0808">
+<script>try{var k=localStorage.getItem("chronicle-skin");if(k)document.documentElement.dataset.skin=k;}catch(e){}</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/favicon-64.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -342,6 +343,29 @@ button.ab-m:hover{color:var(--gold);background:var(--accent-soft)}
 }
 .brand img.logo{width:36px;height:36px;border-radius:9px;flex:none;box-shadow:0 0 0 1px var(--line-soft)}
 .brand.big img.logo{width:104px;height:104px;border-radius:24px}
+
+/* ---- themes ---- */
+:root[data-skin="blood"]{
+  --bg:#070505; --surface:#110B0B; --surface2:#1B1010; --line:#3A1C1C; --line-soft:rgba(214,48,56,.30); --fg:#EEE6E3; --muted:#A38F8C;
+  --foil:#C8242B; --sheen:rgba(255,150,150,.045); --vig:rgba(0,0,0,.82);
+  --accent:#D12A31; --accent-fg:#FFF3F0; --accent-soft:#2A0E10;
+  --ember:#E8E2DC; --ember-bg:#3A3431; --ember-fg:#F7F2ED; --ember-soft:#201B1A;
+  --gold:#FF6560;
+}
+.logo-btn{all:unset;display:inline-flex;cursor:pointer;border-radius:10px;touch-action:manipulation;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.logo-btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.logo-btn:active img{transform:scale(.94)}
+.brand img.logo{transition:transform .12s}
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+::view-transition-old(root){z-index:1}::view-transition-new(root){z-index:2}
+.skin-wash{position:fixed;inset:0;z-index:9998;pointer-events:none}
+.skin-menu{position:fixed;z-index:9999;min-width:220px;background:var(--surface);border:1px solid var(--foil);border-radius:10px;padding:6px;box-shadow:0 14px 40px rgba(0,0,0,.65);display:flex;flex-direction:column;gap:2px}
+.skin-h{font-family:var(--f-display);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:8px 10px 6px}
+.skin-menu button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:11px 10px;border-radius:7px;cursor:pointer;font-family:var(--f-display);font-size:15px;color:var(--fg);min-height:44px}
+.skin-menu button:hover,.skin-menu button:focus-visible{background:var(--accent-soft)}
+.skin-menu button.on{color:var(--gold)}
+.skin-menu b{margin-left:auto}
+.skin-sw{display:inline-flex}.skin-sw i{width:16px;height:16px;border-radius:50%;margin-left:-5px;box-shadow:0 0 0 2px var(--surface)}.skin-sw i:first-child{margin-left:0}
 </style>
 <style>html{color-scheme:dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
 </head>
@@ -356,7 +380,7 @@ button.ab-m:hover{color:var(--gold);background:var(--accent-soft)}
 (function(){
 'use strict';
 const $=s=>document.querySelector(s);
-const D20='<img class="logo" src="icons/icon-192.png" alt="" width="36" height="36">';
+const D20='<button class="logo-btn" type="button" data-logo title="Tap to change theme. Hold for all themes." aria-label="Change theme. Press and hold for all themes."><img class="logo" src="icons/icon-192.png" alt="" width="36" height="36" draggable="false"></button>';
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const mod=s=>Math.floor((s-10)/2);
 const sg=n=>n>=0?'+'+n:''+n;
@@ -1518,6 +1542,61 @@ document.addEventListener('keydown',e=>{
   }
   if(e.key==='Escape'&&S.modal){S.modal=null;render();}
 });
+/* ---------- themes: tap the logo to cycle (circular reveal), hold it for the full list ---------- */
+const THEMES=[
+  {id:'gilded',name:'Gilded Dark',bg:'#0A0808',sw:['#0A0808','#C9A24A','#E4584B']},
+  {id:'blood',name:'Black & Red',bg:'#070505',sw:['#070505','#D12A31','#E8E2DC']}
+];
+const skinNow=()=>document.documentElement.dataset.skin||'gilded';
+function setSkin(id){
+  document.documentElement.dataset.skin=id;
+  const t=THEMES.find(x=>x.id===id)||THEMES[0],m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t.bg);
+  try{localStorage.setItem('chronicle-skin',id);}catch(e){}
+}
+function switchSkin(id,x,y){
+  if(id===skinNow())return;
+  const calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(calm){setSkin(id);return;}
+  const r=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y))+8,ms=750;
+  if(document.startViewTransition){
+    const vt=document.startViewTransition(()=>setSkin(id));
+    vt.ready.then(()=>{document.documentElement.animate({clipPath:['circle(0px at '+x+'px '+y+'px)','circle('+r+'px at '+x+'px '+y+'px)']},{duration:ms,easing:'cubic-bezier(.45,0,.2,1)',pseudoElement:'::view-transition-new(root)'});}).catch(()=>{});
+    return;
+  }
+  const ov=document.createElement('div');                                  /* fallback for browsers without view transitions */
+  ov.className='skin-wash';ov.style.background=(THEMES.find(t=>t.id===id)||THEMES[0]).bg;
+  document.body.appendChild(ov);
+  const a=ov.animate({clipPath:['circle(0px at '+x+'px '+y+'px)','circle('+r+'px at '+x+'px '+y+'px)']},{duration:ms,easing:'cubic-bezier(.45,0,.2,1)',fill:'forwards'});
+  a.onfinish=()=>{setSkin(id);ov.animate({opacity:[1,0]},{duration:200}).onfinish=()=>ov.remove();};
+}
+let skinMenu=null,skinTimer=0,skinHeld=false;
+function closeSkinMenu(){if(skinMenu){skinMenu.remove();skinMenu=null;}}
+function openSkinMenu(btn){
+  closeSkinMenu();const b=btn.getBoundingClientRect(),cur=skinNow(),m=document.createElement('div');
+  m.className='skin-menu';m.setAttribute('role','menu');
+  m.innerHTML='<div class="skin-h">Themes</div>'+THEMES.map(t=>'<button role="menuitem" data-skin="'+t.id+'" class="'+(t.id===cur?'on':'')+'"><span class="skin-sw">'+t.sw.map(c=>'<i style="background:'+c+'"></i>').join('')+'</span><span>'+t.name+'</span>'+(t.id===cur?'<b>✓</b>':'')+'</button>').join('');
+  document.body.appendChild(m);skinMenu=m;
+  m.style.left=Math.max(12,Math.min(b.left,innerWidth-m.offsetWidth-12))+'px';m.style.top=(b.bottom+8)+'px';
+  m.addEventListener('click',e=>{const t=e.target.closest('[data-skin]');if(!t)return;const x=b.left+b.width/2,y=b.top+b.height/2;closeSkinMenu();switchSkin(t.dataset.skin,x,y);});
+  const f=m.querySelector('button.on')||m.querySelector('button');if(f)f.focus();
+}
+const logoOf=e=>{const l=e.target&&e.target.closest&&e.target.closest('[data-logo]');return l&&l.dataset&&('logo' in l.dataset)?l:null;};
+document.addEventListener('pointerdown',e=>{
+  const lg=logoOf(e);
+  if(skinMenu&&!(e.target.closest&&e.target.closest('.skin-menu')))closeSkinMenu();
+  if(!lg)return;
+  skinHeld=false;clearTimeout(skinTimer);skinTimer=setTimeout(()=>{skinHeld=true;openSkinMenu(lg);if(navigator.vibrate)try{navigator.vibrate(12);}catch(x){}},480);
+});
+['pointerup','pointercancel','pointerleave'].forEach(ev=>document.addEventListener(ev,()=>clearTimeout(skinTimer)));
+document.addEventListener('contextmenu',e=>{if(logoOf(e))e.preventDefault();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSkinMenu();});
+document.addEventListener('click',e=>{
+  const lg=logoOf(e);if(!lg)return;
+  if(skinHeld){skinHeld=false;e.preventDefault();return;}
+  const b=lg.getBoundingClientRect(),i=THEMES.findIndex(t=>t.id===skinNow());
+  switchSkin(THEMES[(i+1)%THEMES.length].id,b.left+b.width/2,b.top+b.height/2);
+});
+
 /* ---------- cloud sync (Supabase). Demo data only exists with ?demo=1 (or in the test harness) ---------- */
 const DEMO=typeof location==='undefined'||/[?&]demo=1/.test(location.search);
 if(!DEMO){chars.length=0;camps.length=0;S.user=null;}
