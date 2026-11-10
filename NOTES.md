@@ -26,6 +26,7 @@ Name must always be **The Chronicle**. Look: gothic, near-black, aged gold (play
   (last write wins). If that bites, split log / combatants / prompts into their own tables. Uploaded pictures are shrunk to 640px.
 - Supabase Auth: "Confirm email" should be OFF for signups to log in instantly (Authentication > Providers > Email). Anonymous sign-ins ON.
 - Done: PWA (manifest.webmanifest, sw.js, icons/; app icon is the book-and-d20 artwork; installed name is "The Chronicle"). The service worker is network-first for the page so new commits show quickly; bump `V` in sw.js if caching ever gets stuck.
+- Offline Play: account-owned characters and device-only Offline Play progress are cached in IndexedDB/localStorage after an online session. Offline startup opens the cached character list; edits remain device-only. From an online session, a player can submit that progress to a campaign they already play in. The campaign DM reviews the request in Party and approves or declines; approval applies only that character's progress to that campaign. This is character-only offline support, not offline campaign editing or guest-character sync.
 - Next: split hot data into tables if needed, SRD content, image generator link.
 
 ## Decisions

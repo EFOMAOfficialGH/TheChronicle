@@ -583,13 +583,20 @@ const MAPS_OFF=[
 /* ---------- state ---------- */
 const S={user:{name:'Mohammed',guest:false},authMode:'signin',screen:'campaigns',filter:'all',campId:null,role:null,tab:null,
   charId:null,charTab:'info',charCamp:null,openSheet:null,modal:null,last:null,hist:[],rolling:false,rollSel:[],rollCheck:'Perception',rollKind:'skill',rollWho:'__all',logF:'all',
-  cust:{},saved:{},online:false,fatal:'',trayOpen:false,sync:'ok',booting:false,authErr:'',authBusy:false,mode:'n',pick:{},die:20,mod:0,resCat:'mons',rollMode:'n',seen:{},slotEdit:false,spLvF:'all',openSp:{},dismiss:{},rpDone:null,toastT:0};
+  cust:{},saved:{},offlinePlay:{},online:false,fatal:'',trayOpen:false,sync:'ok',booting:false,authErr:'',authBusy:false,mode:'n',pick:{},die:20,mod:0,resCat:'mons',rollMode:'n',seen:{},slotEdit:false,spLvF:'all',openSp:{},dismiss:{},rpDone:null,toastT:0};
 const DMTABS=[['party','Party'],['init','Encounter'],['rolls','Rolls'],['res','Resources'],['log','Log'],['settings','Settings']];
 const PTABS=[['sheet','Sheet'],['enc','Encounter'],['party','Party'],['spells','Spells'],['gear','Gear'],['log','Log']];
 
 const curCamp=()=>camps.find(c=>c.id===S.campId);
 const ch$=id=>chars.find(x=>x.id===id);
+const cloneData=o=>JSON.parse(JSON.stringify(o));
 const P=(ch,cid)=>{ if(!ch.prog[cid]) ch.prog[cid]={level:1,exp:0,hp:10,max:10,slots:[],gear:[],money:{gp:15,sp:0,cp:0}}; return ch.prog[cid]; };
+function persistOfflinePlay(){if(!S.user||!S.user.uid)return;try{localStorage.setItem('chronicle-offline-play:'+S.user.uid,JSON.stringify(S.offlinePlay));}catch(e){toast('Could not save local offline progress. Device storage may be full.');}offlinePut(S.user.uid,{user:{name:S.user.name,guest:S.user.guest,uid:S.user.uid},chars:chars.filter(ch=>ch.ownerUid===S.user.uid),offlinePlay:S.offlinePlay,savedAt:Date.now()});}
+function offlineProgress(ch){ch.prog=ch.prog||{};if(!S.offlinePlay[ch.id]){const first=Object.keys(ch.prog).find(id=>ch.prog[id]);S.offlinePlay[ch.id]=cloneData(first?P(ch,first):{level:1,exp:0,hp:10,max:10,slots:[],gear:[],money:{gp:15,sp:0,cp:0}});persistOfflinePlay();}return S.offlinePlay[ch.id];}
+function offlineDb(){return new Promise((resolve,reject)=>{const r=indexedDB.open('the-chronicle-offline',1);r.onupgradeneeded=()=>r.result.createObjectStore('snapshots',{keyPath:'uid'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
+async function offlineGet(uid){try{const d=await offlineDb();return await new Promise((resolve,reject)=>{const r=d.transaction('snapshots').objectStore('snapshots').get(uid);r.onsuccess=()=>resolve(r.result||null);r.onerror=()=>reject(r.error);});}catch(e){console.warn('Offline cache unavailable',e);return null;}}
+async function offlinePut(uid,data){try{const d=await offlineDb();await new Promise((resolve,reject)=>{const r=d.transaction('snapshots','readwrite').objectStore('snapshots').put({...data,uid});r.onsuccess=()=>resolve();r.onerror=()=>reject(r.error);});}catch(e){console.warn('Could not save offline snapshot',e);}}
+function cacheOffline(){if(!S.user||!S.user.uid||!cloud.loaded)return;const owned=chars.filter(ch=>ch.ownerUid===S.user.uid);offlinePut(S.user.uid,{user:{name:S.user.name,guest:S.user.guest,uid:S.user.uid},chars:owned,offlinePlay:S.offlinePlay,savedAt:Date.now()});}
 const ownerOf=(c,id)=>{const m=c.members.find(m=>m.charId===id);return m&&m.player;};
 const controller=(c,id)=>c.ctrl[id]||ownerOf(c,id);
 const ctrlChars=c=>c.members.filter(m=>controller(c,m.charId)===S.user.name).map(m=>ch$(m.charId));
@@ -707,7 +714,7 @@ const subOpts=cls=>'<option value="">None yet</option>'+(SUBS[cls]||[]).map(x=>`
 
 function characterView(){
   const ch=ch$(S.charId);if(!ch){S.screen='characters';return charactersView();}
-  const tabs=[['info','Info'],['lore','Lore'],['spells','Spells'],['progress','Progress']];
+  const tabs=[['info','Info'],['lore','Lore'],['spells','Spells'],['progress','Progress'],['offline','Offline Play']];
   let body='';
   const f=(l,p,v,t)=>`<label><span class="lbl">${l}</span><input data-c="set" data-ch="${ch.id}" data-p="${p}" ${t==='n'?'type="number" data-num="1"':''} value="${esc(v)}"></label>`;
   if(S.charTab==='info'){
@@ -722,6 +729,17 @@ function characterView(){
   }
   if(S.charTab==='lore') body=`<div class="card stack"><label class="lbl" for="lore">Lore and backstory</label><textarea id="lore" data-c="set" data-ch="${ch.id}" data-p="lore">${esc(ch.lore)}</textarea></div>`;
   if(S.charTab==='spells') body=`<div class="card">${spellList(ch,true)}</div>`;
+  if(S.charTab==='offline'){
+    const op=offlineProgress(ch),eligible=camps.filter(c=>c.members&&c.members.some(m=>m.charId===ch.id&&m.player===S.user.name));
+    const history=camps.flatMap(c=>(c.offlineRequests||[]).filter(r=>r.charId===ch.id&&r.player===S.user.name).map(r=>({c,r})));
+    const n=(label,key)=>{const value=key.split('.').reduce((o,k)=>o&&o[k],op);return `<label><span class="lbl">${label}</span><input type="number" min="0" data-num="1" data-c="offlineSet" data-ch="${ch.id}" data-p="${key}" value="${Number(value)||0}"></label>`;};
+    body=`<div class="note">Offline Play is a private copy on this device. It does not change a campaign until its DM approves a save request. Connect to the internet to send one.</div>
+    <div class="card stack sec"><div class="editgrid">${n('Level','level')}${n('Experience','exp')}${n('Current HP','hp')}${n('Maximum HP','max')}${n('Gold pieces','money.gp')}</div>
+    <label><span class="lbl">Equipment (one item per line)</span><textarea data-c="offlineGear" data-ch="${ch.id}">${esc((op.gear||[]).map(g=>typeof g==='string'?g:g.n+(g.q>1?' ×'+g.q:'')).join('\n'))}</textarea></label>
+    <p class="muted sm">This copy is saved on this device. Your campaign progress stays unchanged until the DM approves.</p>
+    ${S.online?(eligible.length?`<button class="btn primary" data-a="offlineSaveOpen" data-id="${ch.id}">Save progress to…</button>`:'<p class="muted sm">Join this character to a campaign before requesting approval to save progress.</p>'):'<span class="tag">Offline · saved on this device</span>'}</div>
+    ${history.length?`<div class="sec"><h3>Save requests</h3>${history.map(({c,r})=>`<div class="card row between"><span><b>${esc(c.name)}</b><span class="muted sm" style="display:block">${new Date(r.createdAt).toLocaleString()}</span></span><span class="pill ${r.status==='approved'?'':'ember'}">${esc(r.status)}</span></div>`).join('')}</div>`:''}`;
+  }
   if(S.charTab==='progress'){
     const ids=Object.keys(ch.prog).filter(i=>camps.some(c=>c.id===i));
     if(!ids.length) body=empty('This character has not joined a campaign yet.');
@@ -879,6 +897,8 @@ function dmBody(c){
   return '';
 }
 function dmParty(c){
+  const requests=(c.offlineRequests||[]).filter(r=>r.status==='pending');
+  const requestPanel=requests.length?`<div class="card sec"><h3>Offline progress requests</h3><p class="muted sm">Review each character’s device-saved progress before applying it to this campaign.</p>${requests.map(r=>`<div class="row between" style="padding:10px 0;border-top:1px solid var(--line)"><span><b>${esc(r.charName)}</b><span class="muted sm" style="display:block">${esc(r.player)} · L${Number(r.progress&&r.progress.level)||1} · ${Number(r.progress&&r.progress.hp)||0}/${Number(r.progress&&r.progress.max)||0} HP</span></span><span class="row"><button class="btn xs primary" data-a="offlineApprove" data-id="${r.id}">Approve</button><button class="btn xs danger" data-a="offlineReject" data-id="${r.id}">Decline</button></span></div>`).join('')}</div>`:'';
   if(S.openSheet){
     const ch=ch$(S.openSheet);
     if(ch&&c.members.some(m=>m.charId===ch.id)){
@@ -888,7 +908,7 @@ function dmParty(c){
   }
   const swapped=Object.keys(c.ctrl).length;
   const held=c.members.filter(m=>{const ch=ch$(m.charId);return ch&&ch.owner===null;});
-  return `${swapped?`<div class="note ember row between"><span>Some characters are being played by someone else this session. Owners never change.</span><button class="btn sm" data-a="endSwaps">Return all to owners</button></div>`:''}<div class="grid">${c.members.map(m=>{const ch=ch$(m.charId),p=P(ch,c.id);
+  return `${requestPanel}${swapped?`<div class="note ember row between"><span>Some characters are being played by someone else this session. Owners never change.</span><button class="btn sm" data-a="endSwaps">Return all to owners</button></div>`:''}<div class="grid">${c.members.map(m=>{const ch=ch$(m.charId),p=P(ch,c.id);
     const ctl=controller(c,ch.id),b=ctl!==m.player,players=c.members.map(x=>x.player);
     return `<div class="charcard" style="flex-direction:column;align-items:stretch;gap:8px"><button class="resrow" data-a="openSheet" data-id="${ch.id}" style="flex-direction:column;align-items:stretch;gap:8px"><span class="row" style="flex-wrap:nowrap">${art(ch,56)}<span class="grow"><span class="nm" style="display:block">${esc(ch.name)}</span><span class="muted sm">Owned by ${esc(m.player)} · L${p.level} ${esc(ch.cls)}</span></span></span>${bar(p.hp,p.max)}</button>
     <div class="row between"><span class="muted sm mono">${p.hp}/${p.max} HP · AC ${ch.ac}</span><span class="row" style="gap:6px"><label class="lbl" for="sw-${ch.id}">Played by</label><select id="sw-${ch.id}" style="width:auto;max-width:140px" data-c="ctrl" data-id="${ch.id}">${players.map(p2=>`<option ${p2===ctl?'selected':''}>${esc(p2)}</option>`).join('')}</select>${b?'<span class="pill ember">borrowed</span>':''}</span></div></div>`;}).join('')||empty('No players have joined yet. Share the code in Settings.')}</div>
@@ -956,7 +976,7 @@ const logRoll=(c,text)=>logAdd(c,'roll',text,S.role!=='dm');
 function fixCamp(c){
   c.log=c.log||[];c.init.active=!!c.init.active;c.init.rolled=c.init.rolled||{};c.init.n=c.init.n||0;
   if(!c.logSeed){c.logSeed=1;if(c.init.list.length){c.init.active=true;c.members.forEach(m=>{c.init.rolled[m.charId]=true;});}}
-  c.mons=c.mons||[];c.items=c.items||[];c.maps=c.maps||[];c.shows=c.shows||[];
+  c.mons=c.mons||[];c.items=c.items||[];c.maps=c.maps||[];c.shows=c.shows||[];c.offlineRequests=c.offlineRequests||[];
   if(c.id==='crown'&&!c.seeded){
     c.seeded=1;
     addMon(c,MONSTERS.find(x=>x.name==='Goblin'));addMon(c,MONSTERS.find(x=>x.name==='Owlbear'));
@@ -1143,6 +1163,7 @@ function modalView(){
     case 'gear': return gearModal(m);
     case 'skroll': return skModal(m);
     case 'confirm': return wrap(m.title,`<p>${esc(m.msg)}</p><button class="btn dsolid" data-a="confirmGo">${esc(m.yes)}</button>${close}`);
+    case 'offlineSave':{const ch=ch$(m.ch),eligible=camps.filter(x=>x.members&&x.members.some(y=>y.charId===m.ch&&y.player===S.user.name));return wrap('Request campaign save',`<p>Choose a campaign. Its DM must approve before this offline progress replaces that character’s progress there.</p>${eligible.length?`<label class="lbl" for="offline-camp">Campaign</label><select id="offline-camp">${eligible.map(x=>`<option value="${x.id}">${esc(x.name)} · DM ${esc(x.dm)}</option>`).join('')}</select><button class="btn primary" data-a="offlineSaveSend" data-id="${m.ch}">Send for DM approval</button>`:'<p class="muted">No eligible campaigns.</p>'}${close}`);}
   }
   return '';
 }
@@ -1166,6 +1187,7 @@ function render(quiet){
   if(!quiet&&S.modal&&FORM_MODALS.includes(S.modal.t)){const f=document.querySelector('#modal input,#modal textarea');if(f)f.focus();}
   fitTabs();
   queueSave();
+  cacheOffline();
 }
 
 /* ---------- actions ---------- */
@@ -1218,7 +1240,7 @@ const A={
     else{const local=em?em.split('@')[0]:'';const name=nm||(local?local[0].toUpperCase()+local.slice(1):'Mohammed');S.user={name,guest:false};}
     S.screen='campaigns';
   },
-  signout(){if(S.online&&sb){sb.auth.signOut();if(cloud.chan){sb.removeChannel(cloud.chan);cloud.chan=null;}chars.length=0;camps.length=0;cloud.known={};cloud.saved={};cloud.loaded=false;}S.user=null;S.screen='campaigns';S.authMode='signin';S.modal=null;},
+  signout(){if(S.user&&S.user.uid){const uid=S.user.uid;try{localStorage.removeItem('chronicle-last-user');localStorage.removeItem('chronicle-offline-play:'+uid);}catch(e){}offlineDb().then(d=>d.transaction('snapshots','readwrite').objectStore('snapshots').delete(uid)).catch(()=>{});}if(S.online&&sb){sb.auth.signOut();if(cloud.chan){sb.removeChannel(cloud.chan);cloud.chan=null;}chars.length=0;camps.length=0;cloud.known={};cloud.saved={};cloud.loaded=false;}S.user=null;S.screen='campaigns';S.authMode='signin';S.modal=null;},
   go(el){S.screen=el.dataset.s;S.modal=null;},
   filter(el){S.filter=el.dataset.f;},
   modal(el){S.modal={t:el.dataset.t,camp:S.campId,ch:el.dataset.ch,cat:el.dataset.cat,q:'',lv:'all',mine:false};},
@@ -1266,6 +1288,15 @@ const A={
   pickCtl(el){S.pick[S.campId]=el.dataset.id;},
   switchRole(){S.modal={t:'role',camp:S.campId};},
   switchChar(){S.modal={t:S.user.guest?'newchar':'pickchar',camp:S.campId};},
+  offlineSaveOpen(el){S.modal={t:'offlineSave',ch:el.dataset.id};},
+  async offlineSaveSend(el){
+    const ch=ch$(el.dataset.id),id=val('offline-camp'),c=camps.find(x=>x.id===id);
+    if(!S.online||!ch||!c||!c.members.some(m=>m.charId===ch.id&&m.player===S.user.name)||!(await reachable())){toast('Could not send this request. Check your connection and campaign.');return false;}
+    c.offlineRequests=c.offlineRequests||[];c.offlineRequests=c.offlineRequests.filter(r=>!(r.charId===ch.id&&r.player===S.user.name&&r.status==='pending'));c.offlineRequests.push({id:'or'+Date.now()+Math.floor(Math.random()*10000),charId:ch.id,charName:ch.name,player:S.user.name,progress:cloneData(offlineProgress(ch)),status:'pending',createdAt:new Date().toISOString()});
+    S.modal=null;queueSave();toast('Sent to '+c.dm+' for approval.');render();return;
+  },
+  offlineApprove(el){const c=curCamp(),r=c&&(c.offlineRequests||[]).find(x=>x.id===el.dataset.id),ch=r&&ch$(r.charId),member=r&&c.members.find(m=>m.charId===r.charId&&m.player===r.player);if(!S.online||S.role!=='dm'||!r||r.status!=='pending'||!ch||!member)return false;const p=r.progress||{};ch.prog[c.id]={level:clamp(Number(p.level)||1,1,20),exp:Math.max(0,Number(p.exp)||0),hp:Math.max(0,Number(p.hp)||0),max:Math.max(1,Number(p.max)||1),slots:Array.isArray(p.slots)?p.slots:[],gear:Array.isArray(p.gear)?p.gear:[],money:{gp:Math.max(0,Number(p.money&&p.money.gp)||0),sp:Math.max(0,Number(p.money&&p.money.sp)||0),cp:Math.max(0,Number(p.money&&p.money.cp)||0)}};r.status='approved';r.decidedAt=new Date().toISOString();r.decidedBy=S.user.name;queueSave();toast('Offline progress approved and applied.');},
+  offlineReject(el){const c=curCamp(),r=c&&(c.offlineRequests||[]).find(x=>x.id===el.dataset.id),member=r&&c.members.find(m=>m.charId===r.charId&&m.player===r.player);if(!S.online||S.role!=='dm'||!r||r.status!=='pending'||!member)return false;r.status='rejected';r.decidedAt=new Date().toISOString();r.decidedBy=S.user.name;queueSave();toast('Request declined.');},
   savePlayer(){
     const c=curCamp(),ch=myChar(c);
     if(!ch){toast('Nothing to save yet.');return false;}
@@ -1497,6 +1528,8 @@ const C={
     if(sc)sc.hidden=true;
     return false;
   },
+  offlineSet(el,v){const ch=ch$(el.dataset.ch);let p=offlineProgress(ch),path=el.dataset.p.split('.');if(el.dataset.num)v=Number(v)||0;let o=p;while(path.length>1)o=o[path.shift()];o[path[0]]=v;if(path[0]==='level')o[path[0]]=clamp(o[path[0]],1,20);else o[path[0]]=Math.max(0,o[path[0]]);persistOfflinePlay();return false;},
+  offlineGear(el,v){const ch=ch$(el.dataset.ch);offlineProgress(ch).gear=v.split('\n').map(x=>x.trim()).filter(Boolean).map(n=>({n,q:1,eq:0}));persistOfflinePlay();return false;},
   art(el){
     const f=el.files&&el.files[0];if(!f)return false;
     const ch=ch$(el.dataset.ch);
@@ -1536,6 +1569,7 @@ document.addEventListener('change',e=>{
   const fn=C[el.dataset.c];if(!fn)return;
   if(fn(el,el.value)!==false)render();
 });
+document.addEventListener('input',e=>{const el=e.target.closest('[data-c="offlineSet"],[data-c="offlineGear"]');if(el)C[el.dataset.c](el,el.value);});
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.enter){
     const b=document.querySelector('[data-a="'+e.target.dataset.enter+'"]');if(b){e.preventDefault();b.click();}
@@ -1713,11 +1747,18 @@ async function startSession(user,fallbackName){
   else if(name){await sb.from('profiles').upsert({id:uid,name});}
   if(!name)name=(user.email||'Player').split('@')[0];
   S.user={name,guest:!!user.is_anonymous,uid};
+  try{const op=JSON.parse(localStorage.getItem('chronicle-offline-play:'+uid)||'{}');S.offlinePlay=op;}catch(e){S.offlinePlay={};}
   await loadAll();subscribe();S.sync='ok';S.screen='campaigns';
+  try{localStorage.setItem('chronicle-last-user',uid);}catch(e){}
 }
 async function boot(){
+  if(!(await reachable())){
+    let uid='';try{uid=localStorage.getItem('chronicle-last-user')||'';}catch(e){}
+    const cached=uid?await offlineGet(uid):null;
+    if(cached&&cached.user&&cached.chars){S.user=cached.user;chars.splice(0,chars.length,...cached.chars);camps.length=0;S.offlinePlay=cached.offlinePlay||{};S.online=false;S.screen='characters';S.charTab='offline';S.booting=false;render();return;}
+    S.booting=false;S.fatal='You need to open The Chronicle online once before using Offline Play on this device.';render();return;
+  }
   if(typeof window.supabase==='undefined'){S.booting=false;S.fatal='The connection library did not load. Check your internet and try again.';render();return;}
-  if(!(await reachable())){S.booting=false;S.fatal='Could not reach the server. Check your internet and try again.';render();return;}
   try{
     sb=window.supabase.createClient(SB_URL,SB_KEY);S.online=true;
     const {data}=await sb.auth.getSession();
@@ -1752,6 +1793,7 @@ async function cloudAuth(){
 }
 
 camps.forEach(fixCamp);
+window.addEventListener('online',()=>{if(S.user){persistOfflinePlay();setTimeout(()=>{if(navigator.onLine)location.reload();},700);}});
 if(DEMO){S.booting=false;render();}else{S.booting=true;render();boot();}
 })();
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}catch(e){}
