@@ -12,7 +12,8 @@ create table if not exists profiles (
   created_at timestamptz default now()
 );
 
--- Characters live outside campaigns. Per-campaign progress is inside data.prog.
+-- Characters live outside campaigns. Global progression is inside data.progress;
+-- campaign-owned full-sheet snapshots are stored in the campaign JSON data.
 -- owner_id is null for guest characters (held by the DM until claimed).
 create table if not exists characters (
   id text primary key,
@@ -50,6 +51,20 @@ create or replace function check_dm_password(camp text, pw text) returns boolean
 language sql security definer as $$
   select dm_pw_hash = crypt(pw, dm_pw_hash) from campaigns where id = camp;
 $$;
+
+-- Recovery is allowed only to a signed-in account whose auth email matches the campaign backup email.
+create or replace function recover_dm_password(camp text, pw text) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare caller_email text := lower(coalesce(auth.jwt()->>'email',''));
+begin
+  if auth.uid() is null or caller_email = '' or length(pw) < 6 then return false; end if;
+  update campaigns set dm_pw_hash = crypt(pw, gen_salt('bf'))
+   where id = camp and lower(coalesce(dm_email,'')) = caller_email;
+  return found;
+end;
+$$;
+revoke all on function recover_dm_password(text,text) from public;
+grant execute on function recover_dm_password(text,text) to authenticated;
 
 -- Row level security: signed-in players can read and write the group's data.
 -- (This is a trusted friend group. The DM password gates the DM screen inside the app.)

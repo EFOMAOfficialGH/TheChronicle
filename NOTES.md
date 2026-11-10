@@ -18,7 +18,7 @@ Name must always be **The Chronicle**. Look: gothic, near-black, aged gold (play
 - No `alert/confirm`; use the in-app confirm modal.
 
 ## Status
-- Done: campaigns, accounts UI, characters (+ per-campaign progress), DM tools (party, encounter with start/end and initiative
+- Done: campaigns, accounts UI, characters (global progression plus campaign-owned sheet copies), DM tools (party, encounter with start/end and initiative
   prompt, rolls with adv/dis, resources, log, assignments dropdown), player tabs, dice with modifiers, skills clickable.
 - Done (v1 cloud): Supabase wired in `index.html` (sign up / sign in / guest, load everything at login, debounced save of changed
   characters and campaigns, realtime updates, DM password via `check_dm_password` / `set_dm_password`). Demo data only loads with `?demo=1` on the URL (for testing the UI). On the real site an unreachable server shows an error screen, never demo data.
@@ -26,11 +26,13 @@ Name must always be **The Chronicle**. Look: gothic, near-black, aged gold (play
   (last write wins). If that bites, split log / combatants / prompts into their own tables. Uploaded pictures are shrunk to 640px.
 - Supabase Auth: "Confirm email" should be OFF for signups to log in instantly (Authentication > Providers > Email). Anonymous sign-ins ON.
 - Done: PWA (manifest.webmanifest, sw.js, icons/; app icon is the book-and-d20 artwork; installed name is "The Chronicle"). The service worker is network-first for the page so new commits show quickly; bump `V` in sw.js if caching ever gets stuck.
-- Offline Play: account-owned characters and device-only Offline Play progress are cached in IndexedDB/localStorage after an online session. Offline startup opens the cached character list; edits remain device-only. From an online session, a player can submit that progress to a campaign they already play in. The campaign DM reviews the request in Party and approves or declines; approval applies only that character's progress to that campaign. This is character-only offline support, not offline campaign editing or guest-character sync.
+- Character data: `characters.data.progress` is the global character progression. Each campaign also stores `sheetCopies[characterId]`; campaign play uses that DM-side full-sheet copy. Campaign **Save Progress** copies the campaign sheet back over the global character sheet and refreshes its campaign copies. Existing `prog` campaign progress is migrated into the global `progress` field on load.
+- Offline Play: account-owned full character sheets (progress, stats, skills, spells, gear, etc.) are cached in IndexedDB/localStorage after an online session. Offline startup opens the cached character list; edits auto-save device-side and the **Save Progress** button explicitly saves locally. **Upload Progress** sends the full sheet to an already joined campaign; the DM must open and inspect the submitted sheet before accepting or declining it. Acceptance replaces the global character sheet and campaign copies. This is character-only offline support, not offline campaign editing or guest-character sync.
+- Account password recovery uses Supabase Auth reset emails. DM password recovery uses the `recover_dm_password` RPC and requires signing in with the same account email stored as the campaign backup email. Apply the `recover_dm_password` definition/grant from `supabase/schema.sql` to the existing Supabase project (or run the equivalent migration) before using this feature. DM **Remember me** stores the chosen campaign password in this browser's local storage.
 - Next: split hot data into tables if needed, SRD content, image generator link.
 
 ## Decisions
-- DM password is hashed in Supabase (`set_dm_password` / `check_dm_password`); reset link goes to the backup email.
+- DM password is hashed in Supabase (`set_dm_password` / `check_dm_password`); recovery requires a signed-in account whose email matches the campaign backup email.
 - Guest characters are held by the DM and can be handed over to an account later.
 - Temporary control swaps never change ownership and never show in a player's Characters tab.
 
