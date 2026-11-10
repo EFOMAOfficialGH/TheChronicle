@@ -9,7 +9,7 @@ Name must always be **The Chronicle**. Look: gothic, near-black, aged gold (play
 ## Stack
 - Hosting: Cloudflare Pages (static, no build step). Deploys on every push to `main`.
 - Backend: Supabase (auth, Postgres, realtime). Schema in `supabase/schema.sql`.
-- Code: a single `index.html` (vanilla JS, no framework). State lives in the `S` object plus `chars[]` and `camps[]`;
+- Code: a single `index.html` (a full HTML document: it must keep the charset and viewport meta tags) (vanilla JS, no framework). State lives in the `S` object plus `chars[]` and `camps[]`;
   `render()` rewrites `#app` and `#modal`. Clicks use `data-a` -> `A{}` actions, inputs use `data-c` -> `C{}`.
 
 ## Rules for editing
