@@ -52,19 +52,60 @@ language sql security definer as $$
   select dm_pw_hash = crypt(pw, dm_pw_hash) from campaigns where id = camp;
 $$;
 
--- Recovery is allowed only to a signed-in account whose auth email matches the campaign backup email.
-create or replace function recover_dm_password(camp text, pw text) returns boolean
+-- Password recovery is handled by the send-dm-password Edge Function.
+-- It emails a newly generated password to dm_email and never exposes hashes to the browser.
+create table if not exists public.campaign_dm_password_reset_limits (
+  campaign_id text primary key references public.campaigns(id) on delete cascade,
+  requested_at timestamptz not null default now()
+);
+alter table public.campaign_dm_password_reset_limits enable row level security;
+revoke all on public.campaign_dm_password_reset_limits from public, anon, authenticated;
+grant all on public.campaign_dm_password_reset_limits to service_role;
+
+create or replace function public.claim_campaign_dm_password_reset(camp text)
+returns boolean
 language plpgsql security definer set search_path = public as $$
-declare caller_email text := lower(coalesce(auth.jwt()->>'email',''));
+declare claimed boolean := false;
 begin
-  if auth.uid() is null or caller_email = '' or length(pw) < 6 then return false; end if;
-  update campaigns set dm_pw_hash = crypt(pw, gen_salt('bf'))
-   where id = camp and lower(coalesce(dm_email,'')) = caller_email;
+  insert into public.campaign_dm_password_reset_limits(campaign_id, requested_at)
+  values (camp, now())
+  on conflict (campaign_id) do update
+    set requested_at = now()
+    where public.campaign_dm_password_reset_limits.requested_at < now() - interval '15 minutes'
+  returning true into claimed;
+  return coalesce(claimed, false);
+end;
+$$;
+revoke all on function public.claim_campaign_dm_password_reset(text) from public, anon, authenticated;
+grant execute on function public.claim_campaign_dm_password_reset(text) to service_role;
+
+create or replace function public.rotate_campaign_dm_password_for_email(camp text, pw text)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare previous_hash text; replacement_hash text;
+begin
+  if pw is null or length(pw) < 16 then return null; end if;
+  select dm_pw_hash into previous_hash from public.campaigns where id = camp for update;
+  if not found then return null; end if;
+  update public.campaigns set dm_pw_hash = crypt(pw, gen_salt('bf'))
+   where id = camp returning dm_pw_hash into replacement_hash;
+  return jsonb_build_object('old_hash', previous_hash, 'new_hash', replacement_hash);
+end;
+$$;
+revoke all on function public.rotate_campaign_dm_password_for_email(text, text) from public, anon, authenticated;
+grant execute on function public.rotate_campaign_dm_password_for_email(text, text) to service_role;
+
+create or replace function public.restore_campaign_dm_password_after_email_failure(camp text, expected_hash text, old_hash text)
+returns boolean
+language plpgsql security definer set search_path = public as $$
+begin
+  update public.campaigns set dm_pw_hash = old_hash
+   where id = camp and dm_pw_hash = expected_hash;
   return found;
 end;
 $$;
-revoke all on function recover_dm_password(text,text) from public;
-grant execute on function recover_dm_password(text,text) to authenticated;
+revoke all on function public.restore_campaign_dm_password_after_email_failure(text, text, text) from public, anon, authenticated;
+grant execute on function public.restore_campaign_dm_password_after_email_failure(text, text, text) to service_role;
 
 -- Row level security: signed-in players can read and write the group's data.
 -- (This is a trusted friend group. The DM password gates the DM screen inside the app.)
