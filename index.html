@@ -1251,16 +1251,16 @@ const A={
   roleDM(){const id=S.modal.camp;let remembered='';try{remembered=localStorage.getItem('chronicle-dm-password:'+id)||'';}catch(e){}S.modal={t:'dmpw',camp:id,remembered};if(remembered){A.dmpwGo();return false;}},
   rolePlayer(){enterPlayer(camps.find(x=>x.id===S.modal.camp));},
   dmpwGo(){
-    const c=camps.find(x=>x.id===S.modal.camp),pw=val('m-pw')||(S.modal&&S.modal.remembered)||'';
+    const c=camps.find(x=>x.id===S.modal.camp),m=S.modal,pw=val('m-pw')||(m&&m.remembered)||'',remember=!!(m&&m.remembered)||!!document.getElementById('m-remember')?.checked;
     if(S.online){
-      const m=S.modal;m.err='';
+      m.err='';
       sb.rpc('check_dm_password',{camp:c.id,pw}).then(r=>{
         if(S.modal!==m)return;
-        if(!r.error&&r.data===true){try{if(m.remembered||document.getElementById('m-remember')?.checked)localStorage.setItem('chronicle-dm-password:'+c.id,pw);else localStorage.removeItem('chronicle-dm-password:'+c.id);}catch(e){}enterCamp(c,'dm');}else{if(m.remembered)try{localStorage.removeItem('chronicle-dm-password:'+c.id);}catch(e){}m.err=r.error?'Could not check the password. Try again.':'That password does not match.';}
+        if(!r.error&&r.data===true){let saved=false;try{if(remember){const key='chronicle-dm-password:'+c.id;localStorage.setItem(key,pw);saved=localStorage.getItem(key)===pw;}else localStorage.removeItem('chronicle-dm-password:'+c.id);}catch(e){console.warn('Could not remember DM password in this browser',e);}enterCamp(c,'dm');if(remember)toast(saved?'DM password saved in this browser.':'Joined as DM, but this browser could not save the password.');}else{if(m.remembered)try{localStorage.removeItem('chronicle-dm-password:'+c.id);}catch(e){}m.err=r.error?'Could not check the password. Try again.':'That password does not match.';}
         render();
       });return false;
     }
-    if(pw===c.pw){try{if(document.getElementById('m-remember')?.checked)localStorage.setItem('chronicle-dm-password:'+c.id,pw);}catch(e){}enterCamp(c,'dm');}else S.modal.err='That password does not match.';
+    if(pw===c.pw){let saved=false;try{if(remember){const key='chronicle-dm-password:'+c.id;localStorage.setItem(key,pw);saved=localStorage.getItem(key)===pw;}}catch(e){}enterCamp(c,'dm');if(remember)toast(saved?'DM password saved in this browser.':'Joined as DM, but this browser could not save the password.');}else S.modal.err='That password does not match.';
   },
   dmRecover(){const c=camps.find(x=>x.id===S.modal.camp),m=S.modal;if(!c||!S.online||!sb){m.err='Connect to the internet before requesting a password email.';return false;}if(m.busy)return false;m.busy=true;m.err='';render();sb.functions.invoke('send-dm-password',{body:{camp:c.id}}).then(({data,error})=>{if(S.modal!==m)return;m.busy=false;if(!error&&data&&data.ok){try{localStorage.removeItem('chronicle-dm-password:'+c.id);}catch(e){}S.modal=null;toast('A new DM password was emailed to the campaign backup address.');}else{m.err=(data&&data.error)||'Could not send the password email. Please try again later.';}render();}).catch(()=>{if(S.modal!==m)return;m.busy=false;m.err='Could not send the password email. Please try again later.';render();});return false;},
   dmRecoverToggle(){S.modal.recover=!S.modal.recover;S.modal.err='';},
