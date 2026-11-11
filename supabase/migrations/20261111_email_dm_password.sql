@@ -3,31 +3,6 @@
 
 drop function if exists public.recover_dm_password(text, text);
 
-create table if not exists public.campaign_dm_password_reset_limits (
-  campaign_id text primary key references public.campaigns(id) on delete cascade,
-  requested_at timestamptz not null default now()
-);
-alter table public.campaign_dm_password_reset_limits enable row level security;
-revoke all on public.campaign_dm_password_reset_limits from public, anon, authenticated;
-grant all on public.campaign_dm_password_reset_limits to service_role;
-
-create or replace function public.claim_campaign_dm_password_reset(camp text)
-returns boolean
-language plpgsql security definer set search_path = public as $$
-declare claimed boolean := false;
-begin
-  insert into public.campaign_dm_password_reset_limits(campaign_id, requested_at)
-  values (camp, now())
-  on conflict (campaign_id) do update
-    set requested_at = now()
-    where public.campaign_dm_password_reset_limits.requested_at < now() - interval '15 minutes'
-  returning true into claimed;
-  return coalesce(claimed, false);
-end;
-$$;
-revoke all on function public.claim_campaign_dm_password_reset(text) from public, anon, authenticated;
-grant execute on function public.claim_campaign_dm_password_reset(text) to service_role;
-
 create or replace function public.rotate_campaign_dm_password_for_email(camp text, pw text)
 returns jsonb
 language plpgsql security definer set search_path = public as $$

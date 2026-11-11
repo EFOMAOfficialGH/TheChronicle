@@ -57,15 +57,6 @@ Deno.serve(async (req) => {
     return json({ error: 'Could not send the password email. Check the campaign backup email and try again.' }, 400)
   }
 
-  const { data: allowed, error: limitError } = await admin.rpc('claim_campaign_dm_password_reset', { camp })
-  if (limitError) {
-    console.error('DM password reset migration is missing or unavailable', limitError)
-    return json({ error: 'Password email is not set up yet. Please try again later.' }, 503)
-  }
-  if (allowed !== true) {
-    return json({ error: 'A password email was recently requested for this campaign. Please try again later.' }, 429)
-  }
-
   const password = makePassword()
   const { data: rotation, error: rotateError } = await admin.rpc('rotate_campaign_dm_password_for_email', { camp, pw: password })
   if (rotateError || !rotation?.old_hash || !rotation?.new_hash) {
