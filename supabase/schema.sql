@@ -57,7 +57,7 @@ $$;
 
 create or replace function public.rotate_campaign_dm_password_for_email(camp text, pw text)
 returns jsonb
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare previous_hash text; replacement_hash text;
 begin
   if pw is null or length(pw) < 16 then return null; end if;
