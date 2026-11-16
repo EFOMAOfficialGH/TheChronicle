@@ -52,11 +52,12 @@ Implemented:
 ## Latest corrective milestone: subclass feature overlay
 
 - The `?` button now opens feature details for any subclass, even before that subclass is selected.
-- The overlay uses pointer capture, `touch-action: none`, overscroll containment, and transform-based animation so dragging the handle does not trigger mobile pull-to-refresh.
+- The overlay uses pointer capture, vertical touch handling, overscroll containment, and transform-based animation so the whole sheet can be dragged downward without triggering mobile pull-to-refresh.
 - Dragging now updates the sheet smoothly and supports pointer cancellation without leaving a stuck transform.
 - Builder selection rerenders preserve the independently scrolling content position instead of jumping to the top.
-- Feature entries are now collapsed by default: each level shows the feature name only, and pressing the name expands its flavor/mechanics details.
-- Knowledge Domain’s level 6 **Read Thoughts** entry includes the complete detailed text requested for the accordion example.
+- Feature entries are collapsed by default: each level shows the feature name only, and pressing the name expands a concise flavor-and-mechanics summary below it.
+- The summary format applies to every feature in every subclass; the long Knowledge Domain **Read Thoughts** text was replaced with a compact rules summary.
+- Expanding or collapsing a feature now updates the existing overlay in place instead of rerendering the entire builder and visibly reloading the sheet.
 
 ## Validation for latest corrective milestone
 
@@ -64,3 +65,4 @@ Implemented:
 - JavaScript `node --check` passed.
 - `git diff --check` passed.
 - Browser smoke test passed after escaping the multiline Read Thoughts string; the app mounts normally in Chromium.
+- JavaScript syntax check and `git diff --check` passed after the in-place accordion and full-sheet drag changes.
