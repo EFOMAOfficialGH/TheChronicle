@@ -1,5 +1,15 @@
-# Stage 3 Background
+# Character Builder stages
+
+## Stage 3 Background — complete
 
 - [x] **Official background options:** Show the 2014 Player’s Handbook backgrounds and named variants. Each option must display its tools, skills, and feature name, including “Tools: none” where appropriate.
 - [x] **Selection and feature details:** Selecting a background must highlight that option and reveal a dropdown-like area with the selected feature’s details.
 - [x] **Custom option:** Add a custom background option at the bottom of the list and collect its name, skills, tools, feature name, and feature description. Stage 3 must not continue until the custom background has a name, skills, feature name, and feature description.
+
+## Stage 4 Skills — complete
+
+- [x] **Background-granted skills:** Show skills granted by the selected background in a separate “Granted by your background” section, including custom-background skill text.
+- [x] **Class and subclass choices:** Show class options under “Class skill choices (X)” and use the correct 2014 Player’s Handbook skill pool and choice count for each core class. Include additional skill choices granted by the selected subclass, using that subclass’s correct count and pool. Require the granted number of choices for each rules-based class/subclass combination.
+- [x] **Clickable skill rows:** List the available skills with a checkbox on the right. Clicking anywhere on a skill row, not only the checkbox, must check or uncheck it.
+- [x] **Distinct choices and custom class:** Do not allow choices to duplicate background-granted skills or other selected skill proficiencies. For Custom Class, show all skills and allow an unlimited number of non-duplicate choices.
+- [x] **Stage name:** Replace the Stage 4 label “Ability Scores” with “Skills”.

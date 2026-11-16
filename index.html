@@ -203,6 +203,21 @@ button.dot{width:22px;height:22px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);
   padding:10px 16px;border-radius:12px;font-weight:700;z-index:60;max-width:calc(100vw - 32px);text-align:center}
 .err{color:var(--bad);font-size:15px;font-weight:700}
+.builder-skill-section{margin:0 0 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px}
+.builder-skill-section h3{font-family:var(--f-display);font-size:16px;color:var(--accent);margin:0}
+.builder-skill-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.builder-skill-count{color:var(--muted);font-size:14px;white-space:nowrap}
+.builder-skill-list{display:flex;flex-direction:column}
+.builder-skill-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:8px 4px;border-top:1px solid var(--line);cursor:pointer}
+.builder-skill-row:first-child{border-top:0}
+.builder-skill-row>span{flex:1;min-width:0;font-size:16px}
+.builder-skill-row small{display:block;color:var(--muted);font-size:13px}
+.builder-skill-row input{width:22px;min-width:22px;min-height:22px;margin:0;accent-color:var(--accent);flex:none}
+.builder-skill-row.selected>span{color:var(--accent)}
+.builder-skill-row.unavailable{opacity:.58;cursor:not-allowed}
+.builder-skill-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.builder-skill-tag{border:1px solid var(--line);border-radius:999px;background:var(--surface2);color:var(--accent);padding:5px 10px;font-size:14px}
+.builder-skill-grant-text{margin-top:8px;color:var(--fg);font-size:15px}
 .empty{text-align:center;padding:36px 12px;color:var(--muted)}
 @media (max-width:520px){h1{font-size:26px}.brand.big{font-size:34px}.bignum{font-size:52px}}
 @media (max-width:520px){.builder-top{padding-top:8px}.builder-step{min-width:27px}.builder-step i{width:28px;height:28px;font-size:12px}.builder-step span{font-size:8px}.builder-body{padding-top:14px}.builder-class-name{font-size:18px}.builder-class-meta{font-size:13px}.builder-sub-pick span,.builder-sub-pick small{font-size:13px}.builder-actions .muted{display:none}.builder-actions .btn{flex:1}}
@@ -1293,11 +1308,73 @@ const BUILDER_BACKGROUNDS=[
 ];
 const builderRaceData=n=>BUILDER_RACES.find(x=>x.name===n);
 const builderRaceSubData=(r,n)=>r&&r.subraces.find(x=>x.name===n);
+const BUILDER_SKILLS=['Acrobatics','Animal Handling','Arcana','Athletics','Deception','History','Insight','Intimidation','Investigation','Medicine','Nature','Perception','Performance','Persuasion','Religion','Sleight of Hand','Stealth','Survival'];
+const BUILDER_CLASS_SKILL_RULES={
+  Barbarian:{count:2,pool:['Animal Handling','Athletics','Intimidation','Nature','Perception','Survival']},
+  Bard:{count:3,pool:BUILDER_SKILLS},
+  Cleric:{count:2,pool:['History','Insight','Medicine','Persuasion','Religion']},
+  Druid:{count:2,pool:['Arcana','Animal Handling','Insight','Medicine','Nature','Perception','Religion','Survival']},
+  Fighter:{count:2,pool:['Acrobatics','Animal Handling','Athletics','History','Insight','Intimidation','Perception','Survival']},
+  Monk:{count:2,pool:['Acrobatics','Athletics','History','Insight','Religion','Stealth']},
+  Paladin:{count:2,pool:['Athletics','Insight','Intimidation','Medicine','Persuasion','Religion']},
+  Ranger:{count:3,pool:['Animal Handling','Athletics','Insight','Investigation','Nature','Perception','Stealth','Survival']},
+  Rogue:{count:4,pool:['Acrobatics','Athletics','Deception','Insight','Intimidation','Investigation','Perception','Performance','Persuasion','Sleight of Hand','Stealth']},
+  Sorcerer:{count:2,pool:['Arcana','Deception','Insight','Intimidation','Persuasion','Religion']},
+  Warlock:{count:2,pool:['Arcana','Deception','History','Intimidation','Investigation','Nature','Religion']},
+  Wizard:{count:2,pool:['Arcana','History','Insight','Investigation','Medicine','Religion']}
+};
 function builderStageReady(stage,b){
   if(stage===1){const cl=builderClass(b.cls);return !!cl&&(cl.name==='Custom Class'||!!builderSubData(cl,b.sub));}
   if(stage===2){if(!b.race)return false;if(b.race==='Custom Race')return !!String(b.customRaceName||'').trim()&&Number(b.customRaceSpeed)>0&&Number(b.customRaceSpeed)<=100&&!!String(b.customRaceAsi||'').trim();const r=builderRaceData(b.race);return !!r&&(!r.subraces.length||!!builderRaceSubData(r,b.raceSub));}
   if(stage===3){if(!b.background)return false;if(b.background==='__custom__')return !!String(b.customBackgroundName||'').trim()&&!!String(b.customBackgroundSkills||'').trim()&&!!String(b.customBackgroundFeature||'').trim()&&!!String(b.customBackgroundDetail||'').trim();return BUILDER_BACKGROUNDS.some(x=>x.id===b.background);}
+  if(stage===4)return builderSkillsReady(b);
   return true;
+}
+function builderBackgroundSkillData(b){
+  if(!b.background)return {text:'',skills:[]};
+  const bg=BUILDER_BACKGROUNDS.find(x=>x.id===b.background),text=b.background==='__custom__'?String(b.customBackgroundSkills||'').trim():(bg&&bg.skills)||'';
+  const normalized=' '+text.toLowerCase().replace(/[^a-z]+/g,' ')+' ';
+  const skills=BUILDER_SKILLS.filter(skill=>normalized.includes(' '+skill.toLowerCase().replace(/[^a-z]+/g,' ')+' '));
+  return {text,skills:[...new Set(skills)]};
+}
+function builderSkillSpec(b){
+  const cl=builderClass(b.cls);
+  if(!cl||!builderStageReady(1,b))return null;
+  if(cl.name==='Custom Class')return {className:cl.name,classChoices:null,classPool:BUILDER_SKILLS,subclassName:'',subclassChoices:0,subclassPool:[]};
+  const rule=BUILDER_CLASS_SKILL_RULES[cl.name];if(!rule)return null;
+  let grant=null;
+  if(cl.name==='Bard'&&b.sub==='College of Lore')grant={name:'College of Lore',choices:3,pool:BUILDER_SKILLS};
+  if(cl.name==='Cleric'&&b.sub==='Knowledge Domain')grant={name:'Knowledge Domain',choices:2,pool:['Arcana','History','Nature','Religion']};
+  if(cl.name==='Cleric'&&b.sub==='Nature Domain')grant={name:'Nature Domain',choices:1,pool:['Animal Handling','Nature','Survival']};
+  return {className:cl.name,classChoices:rule.count,classPool:rule.pool,subclassName:grant&&grant.name||'',subclassChoices:grant&&grant.choices||0,subclassPool:grant&&grant.pool||[]};
+}
+function builderSkillsSelectionValid(b,spec){
+  const classSkills=Array.isArray(b.classSkills)?b.classSkills:[],subclassSkills=Array.isArray(b.subclassSkills)?b.subclassSkills:[],all=[...classSkills,...subclassSkills],background=builderBackgroundSkillData(b).skills;
+  if(new Set(all).size!==all.length||all.some(skill=>background.includes(skill)))return false;
+  if(spec.classChoices===null)return subclassSkills.length===0&&classSkills.every(skill=>BUILDER_SKILLS.includes(skill));
+  return classSkills.length===spec.classChoices&&classSkills.every(skill=>spec.classPool.includes(skill))&&subclassSkills.length===spec.subclassChoices&&subclassSkills.every(skill=>spec.subclassPool.includes(skill));
+}
+function builderSkillsReady(b){
+  const spec=builderSkillSpec(b);
+  return !!spec&&builderStageReady(3,b)&&builderSkillsSelectionValid(b,spec);
+}
+function builderSkillRows(pool,b,scope){
+  const selected=scope==='class'?(Array.isArray(b.classSkills)?b.classSkills:[]):(Array.isArray(b.subclassSkills)?b.subclassSkills:[]),other=scope==='class'?(Array.isArray(b.subclassSkills)?b.subclassSkills:[]):(Array.isArray(b.classSkills)?b.classSkills:[]),background=new Set(builderBackgroundSkillData(b).skills);
+  return pool.map(skill=>{
+    const isSelected=selected.includes(skill),fromBackground=background.has(skill)&&!isSelected,fromOther=other.includes(skill)&&!isSelected,disabled=fromBackground||fromOther,reason=fromBackground?'Granted by your background':fromOther?'Selected in another section':'';
+    return `<label class="builder-skill-row ${isSelected?'selected':''} ${disabled?'unavailable':''}"><span>${esc(skill)}${disabled?`<small>${esc(reason)}</small>`:''}</span><input type="checkbox" data-builder-skill="${scope}" value="${esc(skill)}" ${isSelected?'checked':''} ${disabled?'disabled':''} aria-label="${esc(skill+(reason?', '+reason:''))}"></label>`;
+  }).join('');
+}
+function builderSkillChoiceSection(title,count,scope,pool,b){
+  const selected=scope==='class'?(Array.isArray(b.classSkills)?b.classSkills:[]):(Array.isArray(b.subclassSkills)?b.subclassSkills:[]),countText=count===null?`${selected.length} selected · no limit`:`${selected.length} of ${count} selected`;
+  return `<section class="builder-skill-section"><div class="builder-skill-head"><h3>${esc(title)}</h3><span class="builder-skill-count">${esc(countText)}</span></div><div class="builder-skill-list">${builderSkillRows(pool,b,scope)}</div></section>`;
+}
+function builderSkillsView(b){
+  const background=builderBackgroundSkillData(b),backgroundSection=!b.background?`<section class="builder-skill-section"><h3>Granted by your background</h3><p class="muted sm">Choose a background in Stage 3 to see its skill proficiencies.</p></section>`:b.background==='__custom__'?`<section class="builder-skill-section"><h3>Granted by your background</h3><p class="builder-skill-grant-text">${esc(background.text||'No skills entered yet')}</p></section>`:`<section class="builder-skill-section"><h3>Granted by your background</h3><div class="builder-skill-tags">${background.skills.map(skill=>`<span class="builder-skill-tag">${esc(skill)}</span>`).join('')||'<span class="muted sm">None</span>'}</div></section>`;
+  const spec=builderSkillSpec(b);
+  if(!spec)return `<p class="builder-intro">Choose your class and subclass in Stage 1 to see their skill choices.</p>${backgroundSection}`;
+  const classTitle=`Class skill choices (${spec.classChoices===null?'unlimited':spec.classChoices})`,classSection=builderSkillChoiceSection(classTitle,spec.classChoices,'class',spec.classPool,b),subclassSection=spec.subclassChoices?builderSkillChoiceSection(`${spec.subclassName} skill choices (${spec.subclassChoices})`,spec.subclassChoices,'subclass',spec.subclassPool,b):'';
+  return `<p class="builder-intro">Choose your class skills. Background-granted and already selected skills cannot be chosen again.</p>${backgroundSection}${classSection}${subclassSection}`;
 }
 function builderRaceTraitList(traits,b,scope){
   return traits.map(([name,description])=>{const key=scope+':'+name,open=b.raceFeature===key;return `<div class="builder-level"><button class="builder-race-trait ${open?'open':''}" data-a="builderRaceFeature" data-feature="${esc(name)}" aria-expanded="${open}"><strong>${esc(name)}</strong><span>${open?'⌃':'⌄'}</span></button>${open?`<div class="builder-feature-detail">${esc(description)}</div>`:''}</div>`;}).join('');
@@ -1331,7 +1408,7 @@ function builderCustomBackgroundCard(b){
   return `<div><div class="builder-race-card ${selected?'selected':''}"><button class="builder-race-pick" data-a="builderBackground" data-background="__custom__"><span class="builder-race-name">Custom Background${selected?'<span class="pill acc" style="float:right">Selected</span>':''}</span><span class="builder-race-meta">Tools: ${esc(tools)}</span><span class="builder-race-meta">Skills: ${esc(b.customBackgroundSkills||'define your own')}</span><span class="builder-race-count">Feature: ${esc(b.customBackgroundFeature||'define your own')}</span></button></div>${selected?`<div class="builder-race-detail"><div class="builder-custom-fields"><label class="full"><span class="lbl">Background name</span><input data-background-field="customBackgroundName" value="${esc(b.customBackgroundName||'')}" placeholder="e.g. Royal Cartographer" autocomplete="off"></label><label class="full"><span class="lbl">Skills</span><input data-background-field="customBackgroundSkills" value="${esc(b.customBackgroundSkills||'')}" placeholder="e.g. Insight, Religion"></label><label class="full"><span class="lbl">Tools</span><input data-background-field="customBackgroundTools" value="${esc(b.customBackgroundTools??'none')}" placeholder="e.g. Herbalism kit, or none"></label><label class="full"><span class="lbl">Feature name</span><input data-background-field="customBackgroundFeature" value="${esc(b.customBackgroundFeature||'')}" placeholder="e.g. Shelter of the Faithful"></label><label class="full"><span class="lbl">Feature details</span><textarea data-background-field="customBackgroundDetail" placeholder="Describe what this feature provides">${esc(b.customBackgroundDetail||'')}</textarea></label></div></div>`:''}</div>`;
 }
 
-const BUILDER_STAGES=['Class','Race','Background','Ability Scores','Equipment','Details','Review'];
+const BUILDER_STAGES=['Class','Race','Background','Skills','Equipment','Details','Review'];
 const builderClass=n=>BUILDER_CLASSES.find(x=>x.name===n);
 const builderSubData=(c,n)=>c&&c.subs.find(x=>x.name===n);
 function builderProgress(stage){
@@ -1350,8 +1427,8 @@ function builderClassCard(x,b){
 }
 function builderView(m){
   const b=m.builder||(m.builder={stage:1,cls:'',sub:'',help:null,feature:'',race:'',raceSub:''}),stage=b.stage||1,cl=builderClass(b.cls),sub=cl&&builderSubData(cl,b.help||b.sub),classHelp=b.helpKind==='class'&&b.help&&sub,ready=builderStageReady(stage,b);
-  const body=stage===1?`<p class="builder-intro">Choose a class to see its subclass options and a quick guide to how it plays.</p><div class="builder-class-list">${BUILDER_CLASSES.map(x=>builderClassCard(x,b)).join('')}</div>`:stage===2?`<p class="builder-intro">Choose a race to see its ability score increases, subraces, and traits. Use ? for details.</p><div class="builder-race-list">${BUILDER_RACES.map(x=>builderRaceCard(x,b)).join('')}${builderCustomRaceCard(b)}</div>`:stage===3?`<p class="builder-intro">Choose a 2014 Player’s Handbook background to see its proficiencies and feature, or create a custom background.</p><div class="builder-race-list">${BUILDER_BACKGROUNDS.map(x=>builderBackgroundCard(x,b)).join('')}${builderCustomBackgroundCard(b)}</div>`:'<div class="builder-placeholder">(Still not implemented)</div>';
-  const heading=stage===1?'<h3>Choose your class</h3>':stage===2?'<h3>Choose your race</h3>':stage===3?'<h3>Choose your background</h3>':'';
+  const body=stage===1?`<p class="builder-intro">Choose a class to see its subclass options and a quick guide to how it plays.</p><div class="builder-class-list">${BUILDER_CLASSES.map(x=>builderClassCard(x,b)).join('')}</div>`:stage===2?`<p class="builder-intro">Choose a race to see its ability score increases, subraces, and traits. Use ? for details.</p><div class="builder-race-list">${BUILDER_RACES.map(x=>builderRaceCard(x,b)).join('')}${builderCustomRaceCard(b)}</div>`:stage===3?`<p class="builder-intro">Choose a 2014 Player’s Handbook background to see its proficiencies and feature, or create a custom background.</p><div class="builder-race-list">${BUILDER_BACKGROUNDS.map(x=>builderBackgroundCard(x,b)).join('')}${builderCustomBackgroundCard(b)}</div>`:stage===4?builderSkillsView(b):'<div class="builder-placeholder">(Still not implemented)</div>';
+  const heading=stage===1?'<h3>Choose your class</h3>':stage===2?'<h3>Choose your race</h3>':stage===3?'<h3>Choose your background</h3>':stage===4?'<h3>Choose your skills</h3>':'';
   return `<div class="builder-modal"><div class="builder-top"><div class="builder-title"><button class="btn ghost sm" data-a="builderClose" aria-label="Close character builder">×</button><h2>Character Builder</h2><span class="tag">${stage}/7</span></div><div class="builder-stage-label">Stage <b>${esc(BUILDER_STAGES[stage-1])}</b></div><div class="builder-progress">${builderProgress(stage)}</div></div><main class="builder-body">${heading}${body}</main>${classHelp?builderHelpPanel(sub):''}${stage===2&&b.raceHelp?builderRaceHelpPanel(b):''}<div class="builder-actions"><button class="btn ghost" data-a="builderBack">← Back</button><span class="muted">Stage ${stage} of 7</span><button class="btn primary" data-a="builderContinue" ${!ready?'disabled':''}>${stage===7?'Finish':'Continue'} →</button></div></div>`;
 }
 
@@ -1484,11 +1561,11 @@ const A={
   closeModal(){S.modal=null;},
   modalBg(el,e){if(e.target!==el)return false;S.modal=null;},
   creationManual(){S.modal={t:'newchar',camp:S.modal.camp};},
-  creationBuilder(){S.builderScroll=0;S.modal={t:'builder',camp:S.modal.camp,builder:{stage:1,cls:'',sub:'',help:null,feature:''}};},
+  creationBuilder(){S.builderScroll=0;S.modal={t:'builder',camp:S.modal.camp,builder:{stage:1,cls:'',sub:'',help:null,feature:'',classSkills:[],subclassSkills:[]}};},
   creationBack(){S.modal={t:'creationMode',camp:S.modal.camp};},
   builderClose(){S.modal=null;},
-  builderClass(el){const b=S.modal.builder,x=builderClass(el.dataset.cls);if(!x)return;b.cls=x.name;b.sub=x.name==='Custom Class'?'__custom__':'';b.help=null;b.helpKind='';b.feature='';},
-  builderSub(el){S.modal.builder.sub=el.dataset.sub;S.modal.builder.help=null;S.modal.builder.helpKind='';S.modal.builder.feature='';},
+  builderClass(el){const b=S.modal.builder,x=builderClass(el.dataset.cls);if(!x)return;const changed=b.cls!==x.name;if(changed){b.classSkills=[];b.subclassSkills=[];}b.cls=x.name;if(x.name==='Custom Class')b.sub='__custom__';else if(changed)b.sub='';b.help=null;b.helpKind='';b.feature='';},
+  builderSub(el){const b=S.modal.builder,next=el.dataset.sub;if(b.sub!==next)b.subclassSkills=[];b.sub=next;b.help=null;b.helpKind='';b.feature='';},
   builderHelp(el){const b=S.modal.builder;b.help=el.dataset.sub;b.helpKind='class';b.feature='';},
   builderRace(el){const b=S.modal.builder;b.race=el.dataset.race;b.raceSub='';b.raceHelp=null;b.raceFeature='';},
   builderRaceSub(el){const b=S.modal.builder;b.raceSub=el.dataset.sub;b.raceHelp=null;b.raceFeature='';},
@@ -1853,6 +1930,13 @@ document.addEventListener('click',e=>{
   const result=fn(el,e);if(el.dataset.camp==='__offline__')persistOfflinePlay();if(result!==false)render();
 });
 document.addEventListener('change',e=>{
+  const skill=e.target.closest('[data-builder-skill]');
+  if(skill&&S.modal&&S.modal.t==='builder'){
+    const b=S.modal.builder,scope=skill.dataset.builderSkill,key=scope==='class'?'classSkills':'subclassSkills',selected=Array.isArray(b[key])?b[key]:[],other=scope==='class'?(Array.isArray(b.subclassSkills)?b.subclassSkills:[]):(Array.isArray(b.classSkills)?b.classSkills:[]),spec=builderSkillSpec(b),pool=spec&&(scope==='class'?spec.classPool:spec.subclassPool),background=builderBackgroundSkillData(b).skills;
+    if(skill.checked){if(!pool||!pool.includes(skill.value)||background.includes(skill.value)||other.includes(skill.value)){skill.checked=false;return;}if(!selected.includes(skill.value))selected.push(skill.value);b[key]=selected;}
+    else b[key]=selected.filter(value=>value!==skill.value);
+    const body=document.querySelector('.builder-body');if(body)S.builderScroll=body.scrollTop;render();return;
+  }
   const el=e.target.closest('[data-c]');if(!el)return;
   const fn=C[el.dataset.c];if(!fn)return;
   if(fn(el,el.value)!==false)render();if(el.dataset.camp==='__offline__')persistOfflinePlay();
