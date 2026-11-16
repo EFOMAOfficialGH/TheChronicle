@@ -63,3 +63,4 @@ Implemented:
 - HTML parser check passed.
 - JavaScript `node --check` passed.
 - `git diff --check` passed.
+- Browser smoke test passed after escaping the multiline Read Thoughts string; the app mounts normally in Chromium.
