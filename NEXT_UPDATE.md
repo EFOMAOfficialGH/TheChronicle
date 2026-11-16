@@ -58,6 +58,9 @@ Implemented:
 - Feature entries are collapsed by default: each level shows the feature name only, and pressing the name expands a concise flavor-and-mechanics summary below it.
 - The summary format applies to every feature in every subclass; the long Knowledge Domain **Read Thoughts** text was replaced with a compact rules summary.
 - Expanding or collapsing a feature now updates the existing overlay in place instead of rerendering the entire builder and visibly reloading the sheet.
+- Replaced the feature data for all 12 classes and 40 listed subclasses with concise summaries for all 221 official subclass feature entries, including split features such as domain/oath spell lists and multi-part subclass features.
+- Summaries were checked against official D&D Beyond class/subclass pages and Wizards of the Coast SRD/Basic Rules documents, including the 2014 rules basis used by this builder.
+- Mobile drag handling now uses pointer capture and `touch-action: none` on the complete sheet, so downward dismissal works on phone browsers as well as desktop.
 
 ## Validation for latest corrective milestone
 
@@ -66,3 +69,4 @@ Implemented:
 - `git diff --check` passed.
 - Browser smoke test passed after escaping the multiline Read Thoughts string; the app mounts normally in Chromium.
 - JavaScript syntax check and `git diff --check` passed after the in-place accordion and full-sheet drag changes.
+- JavaScript syntax check and `git diff --check` passed after the complete official feature-data replacement and mobile pointer-capture fix.
