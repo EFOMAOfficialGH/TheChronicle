@@ -60,7 +60,8 @@ Implemented:
 - Expanding or collapsing a feature now updates the existing overlay in place instead of rerendering the entire builder and visibly reloading the sheet.
 - Replaced the feature data for all 12 classes and 40 listed subclasses with concise summaries for all 221 official subclass feature entries, including split features such as domain/oath spell lists and multi-part subclass features.
 - Summaries were checked against official D&D Beyond class/subclass pages and Wizards of the Coast SRD/Basic Rules documents, including the 2014 rules basis used by this builder.
-- Mobile drag handling now uses pointer capture and `touch-action: none` on the complete sheet, so downward dismissal works on phone browsers as well as desktop.
+- Mobile drag handling uses pointer capture and vertical touch handling on the complete sheet, so downward dismissal works on phone browsers as well as desktop without blocking scrolling.
+- The sheet now preserves native vertical scrolling on phones; downward dismissal starts only when the sheet is already scrolled to the top, so long feature summaries can be read completely.
 
 ## Validation for latest corrective milestone
 
@@ -70,3 +71,4 @@ Implemented:
 - Browser smoke test passed after escaping the multiline Read Thoughts string; the app mounts normally in Chromium.
 - JavaScript syntax check and `git diff --check` passed after the in-place accordion and full-sheet drag changes.
 - JavaScript syntax check and `git diff --check` passed after the complete official feature-data replacement and mobile pointer-capture fix.
+- JavaScript syntax check and `git diff --check` passed after restoring mobile scrolling alongside drag-to-dismiss.
