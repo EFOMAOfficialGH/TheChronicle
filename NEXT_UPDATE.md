@@ -48,3 +48,18 @@ Implemented:
 - JavaScript syntax check with `node --check` should be run after each edit.
 - Keep the repository as a static no-build Cloudflare Pages site.
 - Push each completed stage to `main` so it can be tested independently.
+
+## Latest corrective milestone: subclass feature overlay
+
+- The `?` button now opens feature details for any subclass, even before that subclass is selected.
+- The overlay uses pointer capture, `touch-action: none`, overscroll containment, and transform-based animation so dragging the handle does not trigger mobile pull-to-refresh.
+- Dragging now updates the sheet smoothly and supports pointer cancellation without leaving a stuck transform.
+- Builder selection rerenders preserve the independently scrolling content position instead of jumping to the top.
+- Feature entries are now collapsed by default: each level shows the feature name only, and pressing the name expands its flavor/mechanics details.
+- Knowledge Domain’s level 6 **Read Thoughts** entry includes the complete detailed text requested for the accordion example.
+
+## Validation for latest corrective milestone
+
+- HTML parser check passed.
+- JavaScript `node --check` passed.
+- `git diff --check` passed.
