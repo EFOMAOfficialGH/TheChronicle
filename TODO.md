@@ -19,7 +19,7 @@
 
 - [x] **Methods:** Offer Standard Array, Point Buy, and Roll 4d6 (drop the lowest) methods.
 - [x] **Assignment:** Assign one available value to each of Strength, Dexterity, Constitution, Intelligence, Wisdom, and Charisma; prevent reusing a result.
-- [x] **Roll 4d6:** Provide Roll dice and Physical Dice options. Allow the rolled set to be rerolled before assignment; allow physical results to be rewritten individually or cleared together.
+- [x] **Roll 4d6:** Provide Roll dice and Physical Dice options. Allow the rolled set to be rerolled before assignment; let physical results be entered one at a time with Enter, reject impossible values immediately, remove results by tapping them, and clear all together.
 - [x] **Point Buy:** Start at 8 in every attribute and track the standard 27-point budget, displaying remaining points and racial bonuses in each row.
 - [x] **Racial bonuses:** Display known racial and subrace bonuses beside each base score and include them in the final total.
 

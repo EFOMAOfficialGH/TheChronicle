@@ -1450,7 +1450,7 @@ function builderPointBuyRows(b){
 }
 function builderPhysicalInputs(b){
   const values=Array.isArray(b.physicalResults)?b.physicalResults:Array(6).fill('');
-  return `<div class="builder-attribute-inputs">${values.map((value,i)=>`<label>Result ${i+1}<input type="number" min="3" max="18" data-builder-physical="${i}" value="${esc(value??'')}" aria-label="Physical dice result ${i+1}"></label>`).join('')}</div>`;
+  return `<div class="builder-attribute-inputs"><input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" data-builder-physical-entry placeholder="Type a result and press Enter" aria-label="Physical dice result" ${values.length>=6?'disabled':''}></div><div class="builder-attribute-results">${values.map((value,i)=>`<button type="button" class="builder-attribute-result" data-a="builderRemovePhysical" data-index="${i}" aria-label="Remove physical dice result ${i+1}">${value}</button>`).join('')||'<span class="muted sm">No results entered yet.</span>'}</div>`;
 }
 function builderAttributesView(b){
   const method=b.attributeMethod||'standard',bonuses=builderAttributeBonuses(b),bonusText=Object.entries(bonuses).filter(([,value])=>value).map(([name,value])=>`+${value} ${name}`).join(' · '),methods=[['standard','Standard Array','15, 14, 13, 12, 10, 8'],['pointbuy','Point Buy','27 points'],['roll','Roll 4d6','Drop the lowest die']];
@@ -1459,7 +1459,7 @@ function builderAttributesView(b){
   else if(method==='roll'){
     const results=Array.isArray(b.rollResults)?b.rollResults:[];
     panel=`<section class="builder-attribute-panel"><h3>Roll 4d6</h3><p class="builder-attribute-note">Roll six scores by rolling 4d6 and dropping the lowest die. Assign each result once. You may reroll the full set before assigning it.</p><div class="row"><button class="btn primary" data-a="builderRollDice">${results.length?'Reroll dice':'Roll dice'}</button>${results.length?`<button class="btn ghost" data-a="builderClearRolls">Clear results</button>`:''}</div>${results.length?`<div class="builder-attribute-results">${results.map((value,i)=>`<span class="builder-attribute-result">${value}</span>`).join('')}</div>`:'<p class="muted sm">No results yet.</p>'}</section><section class="builder-attribute-panel"><h3>Assign your results</h3>${bonusText?`<p class="builder-attribute-note">Racial bonuses: ${esc(bonusText)}</p>`:''}${builderAttributeAssignmentRows(b)}</section>`;
-  }else if(method==='physical')panel=`<section class="builder-attribute-panel"><h3>Physical Dice</h3><p class="builder-attribute-note">Roll six scores yourself, calculate each total, and enter the results below. Each result can be edited, and Clear all removes every result and assignment.</p>${builderPhysicalInputs(b)}<div class="row" style="margin-top:10px"><button class="btn ghost" data-a="builderClearPhysical">Clear all</button></div></section><section class="builder-attribute-panel"><h3>Assign your results</h3>${bonusText?`<p class="builder-attribute-note">Racial bonuses: ${esc(bonusText)}</p>`:''}${builderAttributeAssignmentRows(b)}</section>`;
+  }else if(method==='physical')panel=`<section class="builder-attribute-panel"><h3>Physical Dice</h3><p class="builder-attribute-note">Roll six scores yourself, calculate each total, then type each result and press Enter. Impossible values are rejected immediately. Tap any entered result to remove it.</p>${builderPhysicalInputs(b)}<div class="row" style="margin-top:10px"><button class="btn ghost" data-a="builderClearPhysical">Clear all</button></div></section><section class="builder-attribute-panel"><h3>Assign your results</h3>${bonusText?`<p class="builder-attribute-note">Racial bonuses: ${esc(bonusText)}</p>`:''}${builderAttributeAssignmentRows(b)}</section>`;
   else panel=`<section class="builder-attribute-panel"><h3>Standard Array</h3><p class="builder-attribute-note">Assign each of these scores once: 15, 14, 13, 12, 10, and 8.</p><div class="builder-attribute-results">${BUILDER_STANDARD_ARRAY.map(value=>`<span class="builder-attribute-result">${value}</span>`).join('')}</div>${bonusText?`<p class="builder-attribute-note">Racial bonuses: ${esc(bonusText)}</p>`:''}${builderAttributeAssignmentRows(b)}</section>`;
   return `<p class="builder-intro">Choose an ability-score method, then assign one available value to each attribute. Final totals include racial bonuses.</p><div class="builder-attribute-methods">${methods.map(([key,name,detail])=>`<button class="builder-attribute-method ${method===key||(key==='roll'&&method==='physical')?'selected':''}" data-a="builderAttributeMethod" data-method="${key}"><strong>${name}</strong><small>${detail}</small></button>`).join('')}</div>${method==='roll'||method==='physical'?`<div class="builder-attribute-methods" style="grid-template-columns:1fr 1fr"><button class="builder-attribute-method ${method==='roll'?'selected':''}" data-a="builderAttributeMethod" data-method="roll"><strong>Roll dice</strong><small>Roll 4d6 and drop the lowest</small></button><button class="builder-attribute-method ${method==='physical'?'selected':''}" data-a="builderAttributeMethod" data-method="physical"><strong>Physical Dice</strong><small>Enter the six results yourself</small></button></div>`:''}${panel}`;
 }
@@ -1583,7 +1583,7 @@ function render(quiet){
   $('#modal').innerHTML=mh;
   if(!quiet&&S.modal&&FORM_MODALS.includes(S.modal.t)){const f=document.querySelector('#modal input,#modal textarea');if(f)f.focus();}
   fitTabs();
-  if(S.modal&&S.modal.t==='builder'){const body=document.querySelector('.builder-body');if(body)body.scrollTop=S.builderScroll||0;}
+  if(S.modal&&S.modal.t==='builder'){const body=document.querySelector('.builder-body');if(body){body.scrollTop=S.builderScroll||0;requestAnimationFrame(()=>{const current=document.querySelector('.builder-body');if(current)current.scrollTop=S.builderScroll||0;});}}
   queueSave();
   cacheOffline();
 }
@@ -1658,6 +1658,7 @@ const A={
   builderClearRolls(){const b=S.modal.builder;b.rollResults=[];b.attributeAssignments=b.attributeAssignments||{};b.attributeAssignments.roll={};},
   builderPointBuy(el){const b=S.modal.builder,attribute=el.dataset.attribute,value=builderPointBuyValue(b,attribute),next=value+Number(el.dataset.delta);if(BUILDER_POINT_COST[next]===undefined||next<8||next>15)return false;const delta=BUILDER_POINT_COST[next]-BUILDER_POINT_COST[value];if(delta>builderPointBuyRemaining(b))return false;b.pointBuy=b.pointBuy||{};b.pointBuy[attribute]=next;},
   builderClearPhysical(){const b=S.modal.builder;b.physicalResults=Array(6).fill('');b.attributeAssignments=b.attributeAssignments||{};b.attributeAssignments.physical={};},
+  builderRemovePhysical(el){const b=S.modal.builder,index=Number(el.dataset.index);if(!Array.isArray(b.physicalResults)||index<0||index>=b.physicalResults.length)return false;b.physicalResults.splice(index,1);const assignments=b.attributeAssignments&&b.attributeAssignments.physical||{};b.attributeAssignments=b.attributeAssignments||{};b.attributeAssignments.physical={};Object.entries(assignments).forEach(([attribute,key])=>{const oldIndex=Number(String(key).replace('physical-',''));if(oldIndex===index)return;b.attributeAssignments.physical[attribute]='physical-'+(oldIndex>index?oldIndex-1:oldIndex);});},
   builderHelp(el){const b=S.modal.builder;b.help=el.dataset.sub;b.helpKind='class';b.feature='';},
   builderRace(el){const b=S.modal.builder;b.race=el.dataset.race;b.raceSub='';b.raceHelp=null;b.raceFeature='';},
   builderRaceSub(el){const b=S.modal.builder;b.raceSub=el.dataset.sub;b.raceHelp=null;b.raceFeature='';},
@@ -2030,7 +2031,7 @@ document.addEventListener('change',e=>{
   }
   const attribute=e.target.closest('[data-builder-attribute]');
   if(attribute&&S.modal&&S.modal.t==='builder'){
-    const b=S.modal.builder,assignments=builderAttributeAssignments(b);if(attribute.value)assignments[attribute.dataset.builderAttribute]=attribute.value;else delete assignments[attribute.dataset.builderAttribute];render();return;
+    const b=S.modal.builder,assignments=builderAttributeAssignments(b);if(attribute.value)assignments[attribute.dataset.builderAttribute]=attribute.value;else delete assignments[attribute.dataset.builderAttribute];const body=document.querySelector('.builder-body');if(body)S.builderScroll=body.scrollTop;render();return;
   }
   const skill=e.target.closest('[data-builder-skill]');
   if(skill&&S.modal&&S.modal.t==='builder'){
@@ -2043,9 +2044,15 @@ document.addEventListener('change',e=>{
   const fn=C[el.dataset.c];if(!fn)return;
   if(fn(el,el.value)!==false)render();if(el.dataset.camp==='__offline__')persistOfflinePlay();
 });
-document.addEventListener('input',e=>{const physical=e.target.closest('[data-builder-physical]');if(physical&&S.modal&&S.modal.t==='builder'){const b=S.modal.builder;b.physicalResults=b.physicalResults||Array(6).fill('');b.physicalResults[Number(physical.dataset.builderPhysical)]=physical.value;const next=document.querySelector('.builder-actions [data-a="builderContinue"]');if(next&&b.stage===5)next.disabled=!builderStageReady(5,b);return;}const field=e.target.closest('[data-background-field]');if(!field||!S.modal||S.modal.t!=='builder')return;const b=S.modal.builder;b[field.dataset.backgroundField]=field.value;const next=document.querySelector('.builder-actions [data-a="builderContinue"]');if(next&&b.stage===3)next.disabled=!builderStageReady(3,b);});
+document.addEventListener('input',e=>{const physical=e.target.closest('[data-builder-physical-entry]');if(physical&&S.modal&&S.modal.t==='builder'){const raw=physical.value.trim();if(raw&&(!/^\d{0,2}$/.test(raw)||Number(raw)>18)){physical.value='';toast('Enter a whole number from 3 to 18.');}return;}const field=e.target.closest('[data-background-field]');if(!field||!S.modal||S.modal.t!=='builder')return;const b=S.modal.builder;b[field.dataset.backgroundField]=field.value;const next=document.querySelector('.builder-actions [data-a="builderContinue"]');if(next&&b.stage===3)next.disabled=!builderStageReady(3,b);});
 document.addEventListener('input',e=>{const raceField=e.target.closest('[data-race-field]');if(raceField&&S.modal&&S.modal.t==='builder'){const b=S.modal.builder;b[raceField.dataset.raceField]=raceField.value;const next=document.querySelector('.builder-actions [data-a="builderContinue"]');if(next)next.disabled=!builderStageReady(2,b);return;}const el=e.target.closest('[data-c]');if(!el||el.dataset.camp!=='__offline__')return;const fn=C[el.dataset.c];if(fn)fn(el,el.value);persistOfflinePlay();});
 document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.target.matches('[data-builder-physical-entry]')&&S.modal&&S.modal.t==='builder'){
+    e.preventDefault();const input=e.target,raw=input.value.trim(),value=Number(raw),b=S.modal.builder;
+    if(!/^\d+$/.test(raw)||!Number.isInteger(value)||value<3||value>18){input.value='';toast('Enter a whole number from 3 to 18.');return;}
+    b.physicalResults=b.physicalResults||[];if(b.physicalResults.length>=6){input.value='';toast('You already entered six results.');return;}
+    b.physicalResults.push(value);input.value='';const body=document.querySelector('.builder-body');if(body)S.builderScroll=body.scrollTop;render();return;
+  }
   if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.enter){
     const b=document.querySelector('[data-a="'+e.target.dataset.enter+'"]');if(b){e.preventDefault();b.click();}
   }
