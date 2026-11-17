@@ -13,3 +13,7 @@ The app is a static Cloudflare Pages site. `index.html` contains the complete HT
 ## Stage 5 Attributes
 
 Stage 5 uses three transient builder methods: the fixed Standard Array, 27-point Point Buy, and Roll 4d6 with the lowest die removed. Roll results and physical-dice entries are stored as indexed result tokens so duplicate numbers remain independently assignable while each result is still used once. Physical Dice uses one Enter-driven input, immediate validation, removable result chips, and a Clear all action. Point Buy starts all six attributes at 8 and uses the standard 8–15 cost table. Racial and subrace ability-score increases are parsed from the existing race data and displayed separately from the base score and final total.
+
+## Stage 6 Basic Info
+
+Stage 6 stores transient `basicName`, `basicAge`, `basicHeight`, and `basicBackstory` fields in the existing builder state. Character Name is the only required field; delegated input handling updates the state and Continue readiness as the user types. The stage list is expanded to nine entries so Equipment, Details, and Review follow Basic Info without changing the Supabase schema.

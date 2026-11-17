@@ -26,3 +26,9 @@
 ## Race data — complete
 
 - [x] **Dragonborn ancestry choices:** Add Black, Blue, Brass, Bronze, Copper, Gold, Green, Red, Silver, and White as selectable Dragonborn ancestry options with their official damage type, breath weapon area, saving throw, and resistance details.
+
+## Stage 6 Basic Info — complete
+
+- [x] **Character details:** Add Character Name, Age, Height, and Backstory fields.
+- [x] **Required name:** Keep Age, Height, and Backstory optional; require a nonblank Character Name before continuing.
+- [x] **Stage flow:** Expand the builder to nine stages and place Basic Info between Attributes and Equipment.
