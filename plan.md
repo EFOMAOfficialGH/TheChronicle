@@ -9,3 +9,7 @@ Extend the builder’s existing transient state, delegated DOM event handling, s
 ## Project structure
 
 The app is a static Cloudflare Pages site. `index.html` contains the complete HTML document, CSS, application state, view rendering, delegated event handling, and builder data. `plan.md`, `TODO.md`, and `NOTES.md` document implementation decisions and outcomes. There is no build step or framework, and no backend changes or new dependencies are required.
+
+## Stage 5 Attributes
+
+Stage 5 uses three transient builder methods: the fixed Standard Array, 27-point Point Buy, and Roll 4d6 with the lowest die removed. Roll results and physical-dice entries are stored as indexed result tokens so duplicate numbers remain independently assignable while each result is still used once. Point Buy starts all six attributes at 8 and uses the standard 8–15 cost table. Racial and subrace ability-score increases are parsed from the existing race data and displayed separately from the base score and final total.

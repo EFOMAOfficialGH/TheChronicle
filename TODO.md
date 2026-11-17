@@ -15,6 +15,14 @@
 - [x] **Distinct choices and custom class:** Do not allow choices to duplicate background-granted skills or other selected skill proficiencies. For Custom Class, show all skills and allow an unlimited number of non-duplicate choices.
 - [x] **Stage name:** Replace the Stage 4 label “Ability Scores” with “Skills”.
 
+## Stage 5 Attributes — complete
+
+- [x] **Methods:** Offer Standard Array, Point Buy, and Roll 4d6 (drop the lowest) methods.
+- [x] **Assignment:** Assign one available value to each of Strength, Dexterity, Constitution, Intelligence, Wisdom, and Charisma; prevent reusing a result.
+- [x] **Roll 4d6:** Provide Roll dice and Physical Dice options. Allow the rolled set to be rerolled before assignment; allow physical results to be rewritten individually or cleared together.
+- [x] **Point Buy:** Start at 8 in every attribute and track the standard 27-point budget, displaying remaining points and racial bonuses in each row.
+- [x] **Racial bonuses:** Display known racial and subrace bonuses beside each base score and include them in the final total.
+
 ## Race data — complete
 
 - [x] **Dragonborn ancestry choices:** Add Black, Blue, Brass, Bronze, Copper, Gold, Green, Red, Silver, and White as selectable Dragonborn ancestry options with their official damage type, breath weapon area, saving throw, and resistance details.

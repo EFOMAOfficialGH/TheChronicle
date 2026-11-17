@@ -218,8 +218,9 @@ button.dot{width:22px;height:22px}
 .builder-skill-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .builder-skill-tag{border:1px solid var(--line);border-radius:999px;background:var(--surface2);color:var(--accent);padding:5px 10px;font-size:14px}
 .builder-skill-grant-text{margin-top:8px;color:var(--fg);font-size:15px}
+.builder-attribute-methods{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.builder-attribute-method{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:inherit;padding:11px 8px;text-align:center;font:inherit;cursor:pointer}.builder-attribute-method.selected{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);box-shadow:0 0 0 1px var(--accent)}.builder-attribute-method strong{display:block;font-family:var(--f-display);font-size:15px}.builder-attribute-method small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.builder-attribute-panel{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px;margin-bottom:12px}.builder-attribute-panel h3{margin:0 0 5px;color:var(--accent);font-family:var(--f-display);font-size:17px}.builder-attribute-results{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}.builder-attribute-result{border:1px solid var(--line);border-radius:8px;background:var(--surface2);padding:7px 10px;font-family:var(--f-mono);font-weight:700}.builder-attribute-assignment{display:grid;grid-template-columns:minmax(110px,1fr) 118px auto auto;align-items:center;gap:8px;border-top:1px solid var(--line);padding:9px 0}.builder-attribute-assignment:first-child{border-top:0}.builder-attribute-assignment label{font-family:var(--f-display);font-weight:700}.builder-attribute-assignment select{width:100%;min-height:38px}.builder-attribute-bonus{color:var(--accent);font-family:var(--f-mono);font-size:13px;white-space:nowrap}.builder-attribute-total{font-family:var(--f-mono);font-weight:700;white-space:nowrap}.builder-point-buy-line{display:grid;grid-template-columns:minmax(110px,1fr) auto auto auto auto;align-items:center;gap:8px;border-top:1px solid var(--line);padding:8px 0}.builder-point-buy-line:first-of-type{border-top:0}.builder-point-buy-line strong{font-family:var(--f-display)}.builder-point-buy-line .btn{min-width:30px;padding-inline:8px}.builder-point-buy-points{color:var(--muted);font-family:var(--f-mono);white-space:nowrap}.builder-attribute-inputs{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}.builder-attribute-inputs label{display:flex;flex-direction:column;gap:4px;color:var(--muted);font-size:12px}.builder-attribute-inputs input{text-align:center}.builder-attribute-note{color:var(--muted);font-size:13px;margin:5px 0 10px}.builder-level-choice{display:flex;align-items:center;gap:10px;margin:10px 0 14px}.builder-level-choice select{width:auto}
 .empty{text-align:center;padding:36px 12px;color:var(--muted)}
-@media (max-width:520px){h1{font-size:26px}.brand.big{font-size:34px}.bignum{font-size:52px}}
+@media (max-width:520px){h1{font-size:26px}.brand.big{font-size:34px}.bignum{font-size:52px}.builder-attribute-methods{grid-template-columns:1fr}.builder-attribute-assignment{grid-template-columns:minmax(95px,1fr) 105px auto auto}.builder-attribute-bonus{grid-column:3}.builder-attribute-total{grid-column:4}.builder-point-buy-line{grid-template-columns:minmax(95px,1fr) auto auto auto}.builder-point-buy-points{grid-column:2/-1}.builder-attribute-inputs{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:520px){.builder-top{padding-top:8px}.builder-step{min-width:27px}.builder-step i{width:28px;height:28px;font-size:12px}.builder-step span{font-size:8px}.builder-body{padding-top:14px}.builder-class-name{font-size:18px}.builder-class-meta{font-size:13px}.builder-sub-pick span,.builder-sub-pick small{font-size:13px}.builder-actions .muted{display:none}.builder-actions .btn{flex:1}}
 
 /* ---- D&D skin ---- */
@@ -1339,6 +1340,7 @@ function builderStageReady(stage,b){
   if(stage===2){if(!b.race)return false;if(b.race==='Custom Race')return !!String(b.customRaceName||'').trim()&&Number(b.customRaceSpeed)>0&&Number(b.customRaceSpeed)<=100&&!!String(b.customRaceAsi||'').trim();const r=builderRaceData(b.race);return !!r&&(!r.subraces.length||!!builderRaceSubData(r,b.raceSub));}
   if(stage===3){if(!b.background)return false;if(b.background==='__custom__')return !!String(b.customBackgroundName||'').trim()&&!!String(b.customBackgroundSkills||'').trim()&&!!String(b.customBackgroundFeature||'').trim()&&!!String(b.customBackgroundDetail||'').trim();return BUILDER_BACKGROUNDS.some(x=>x.id===b.background);}
   if(stage===4)return builderSkillsReady(b);
+  if(stage===5)return builderAttributesReady(b);
   return true;
 }
 function builderBackgroundSkillData(b){
@@ -1390,6 +1392,77 @@ function builderSkillsView(b){
   const classTitle=`Class skill choices (${spec.classChoices===null?'unlimited':spec.classChoices})`,classSection=builderSkillChoiceSection(classTitle,spec.classChoices,'class',spec.classPool,b),subclassSection=spec.subclassChoices?builderSkillChoiceSection(`${spec.subclassName} skill choices (${spec.subclassChoices})`,spec.subclassChoices,'subclass',spec.subclassPool,b):'';
   return `<p class="builder-intro">Choose your class skills. Background-granted and already selected skills cannot be chosen again. Subclass skill grants appear only when your stated level reaches the feature level.</p>${backgroundSection}${classSection}${subclassSection}`;
 }
+const BUILDER_ATTRIBUTES=['Strength','Dexterity','Constitution','Intelligence','Wisdom','Charisma'];
+const BUILDER_STANDARD_ARRAY=[15,14,13,12,10,8];
+const BUILDER_POINT_COST={8:0,9:1,10:2,11:3,12:4,13:5,14:7,15:9};
+function builderAttributeAssignments(b){
+  const method=b.attributeMethod||'standard';
+  b.attributeAssignments=b.attributeAssignments||{};
+  b.attributeAssignments[method]=b.attributeAssignments[method]||{};
+  return b.attributeAssignments[method];
+}
+function builderAttributeBonuses(b){
+  const bonuses=Object.fromEntries(BUILDER_ATTRIBUTES.map(x=>[x,0]));
+  const add=(text,allowAll=true)=>{
+    const value=String(text||'');
+    if(allowAll&&/to all ability scores/i.test(value))BUILDER_ATTRIBUTES.forEach(x=>bonuses[x]++);
+    BUILDER_ATTRIBUTES.forEach(attribute=>{
+      const match=value.match(new RegExp('\\+([0-9]+)\\s+'+attribute,'i'));
+      if(match)bonuses[attribute]+=Number(match[1]);
+    });
+  };
+  if(b.race==='Custom Race')add(b.customRaceAsi);else{
+    const race=builderRaceData(b.race),sub=builderRaceSubData(race,b.raceSub);
+    if(race)add(race.asi);if(sub)add(sub.asi,false);
+  }
+  return bonuses;
+}
+function builderPointBuyValue(b,attribute){return Number(b.pointBuy&&b.pointBuy[attribute])||8;}
+function builderPointBuySpent(b){return BUILDER_ATTRIBUTES.reduce((sum,attribute)=>sum+(BUILDER_POINT_COST[builderPointBuyValue(b,attribute)]??99),0);}
+function builderPointBuyRemaining(b){return 27-builderPointBuySpent(b);}
+function builderAttributeChoices(b){
+  const method=b.attributeMethod||'standard';
+  if(method==='standard')return BUILDER_STANDARD_ARRAY.map((value,i)=>({key:'standard-'+i,value}));
+  if(method==='roll')return (Array.isArray(b.rollResults)?b.rollResults:[]).map((value,i)=>({key:'roll-'+i,value:Number(value)})).filter(x=>Number.isInteger(x.value));
+  return (Array.isArray(b.physicalResults)?b.physicalResults:[]).map((value,i)=>({key:'physical-'+i,value:Number(value)})).filter(x=>Number.isInteger(x.value)&&x.value>=3&&x.value<=18);
+}
+function builderAttributeValue(b,attribute){
+  const assignment=builderAttributeAssignments(b)[attribute],choice=builderAttributeChoices(b).find(x=>x.key===assignment);
+  return choice?choice.value:null;
+}
+function builderAttributesReady(b){
+  const method=b.attributeMethod||'standard';
+  if(method==='pointbuy')return builderPointBuyRemaining(b)===0;
+  const choices=builderAttributeChoices(b),assignments=builderAttributeAssignments(b),used=BUILDER_ATTRIBUTES.map(x=>assignments[x]).filter(Boolean);
+  return choices.length===6&&used.length===6&&new Set(used).size===6&&BUILDER_ATTRIBUTES.every(attribute=>builderAttributeValue(b,attribute)!==null);
+}
+function builderAttributeAssignmentRows(b){
+  const assignments=builderAttributeAssignments(b),choices=builderAttributeChoices(b),used=new Set(Object.values(assignments));
+  const bonuses=builderAttributeBonuses(b);
+  return BUILDER_ATTRIBUTES.map(attribute=>{
+    const selected=assignments[attribute]||'',base=builderAttributeValue(b,attribute),options=choices.filter(choice=>!used.has(choice.key)||choice.key===selected).map(choice=>`<option value="${esc(choice.key)}" ${choice.key===selected?'selected':''}>${choice.value}</option>`).join('');
+    return `<div class="builder-attribute-assignment"><label for="builder-attribute-${attribute}">${esc(attribute)}</label><select id="builder-attribute-${attribute}" data-builder-attribute="${esc(attribute)}" ${choices.length<6?'disabled':''}><option value="">Choose</option>${options}</select><span class="builder-attribute-bonus">${bonuses[attribute]?'(+'+bonuses[attribute]+')':''}</span><span class="builder-attribute-total">${base===null?'—':base+bonuses[attribute]}</span></div>`;
+  }).join('');
+}
+function builderPointBuyRows(b){
+  const bonuses=builderAttributeBonuses(b);
+  return BUILDER_ATTRIBUTES.map(attribute=>{const value=builderPointBuyValue(b,attribute),bonus=bonuses[attribute];return `<div class="builder-point-buy-line"><strong>${esc(attribute)}</strong><button class="btn xs" data-a="builderPointBuy" data-attribute="${esc(attribute)}" data-delta="-1" ${value<=8?'disabled':''} aria-label="Lower ${esc(attribute)}">−</button><span class="builder-point-buy-points">${value}</span><button class="btn xs" data-a="builderPointBuy" data-attribute="${esc(attribute)}" data-delta="1" ${value>=15||builderPointBuySpent(b)+(BUILDER_POINT_COST[value+1]-BUILDER_POINT_COST[value])>27?'disabled':''} aria-label="Raise ${esc(attribute)}">+</button><span class="builder-attribute-bonus">${bonus?'(+'+bonus+')':''}</span><span class="builder-attribute-total">= ${value+bonus}</span></div>`;}).join('');
+}
+function builderPhysicalInputs(b){
+  const values=Array.isArray(b.physicalResults)?b.physicalResults:Array(6).fill('');
+  return `<div class="builder-attribute-inputs">${values.map((value,i)=>`<label>Result ${i+1}<input type="number" min="3" max="18" data-builder-physical="${i}" value="${esc(value??'')}" aria-label="Physical dice result ${i+1}"></label>`).join('')}</div>`;
+}
+function builderAttributesView(b){
+  const method=b.attributeMethod||'standard',bonuses=builderAttributeBonuses(b),bonusText=Object.entries(bonuses).filter(([,value])=>value).map(([name,value])=>`+${value} ${name}`).join(' · '),methods=[['standard','Standard Array','15, 14, 13, 12, 10, 8'],['pointbuy','Point Buy','27 points'],['roll','Roll 4d6','Drop the lowest die']];
+  let panel='';
+  if(method==='pointbuy')panel=`<section class="builder-attribute-panel"><h3>Point Buy</h3><p class="builder-attribute-note">Spend points to raise each score from 8 to 15. Racial bonuses are added after the purchased score.</p><p class="builder-attribute-note"><b>Points Remaining: ${builderPointBuyRemaining(b)}/27</b>${bonusText?' · Racial bonuses: '+esc(bonusText):''}</p>${builderPointBuyRows(b)}</section>`;
+  else if(method==='roll'){
+    const results=Array.isArray(b.rollResults)?b.rollResults:[];
+    panel=`<section class="builder-attribute-panel"><h3>Roll 4d6</h3><p class="builder-attribute-note">Roll six scores by rolling 4d6 and dropping the lowest die. Assign each result once. You may reroll the full set before assigning it.</p><div class="row"><button class="btn primary" data-a="builderRollDice">${results.length?'Reroll dice':'Roll dice'}</button>${results.length?`<button class="btn ghost" data-a="builderClearRolls">Clear results</button>`:''}</div>${results.length?`<div class="builder-attribute-results">${results.map((value,i)=>`<span class="builder-attribute-result">${value}</span>`).join('')}</div>`:'<p class="muted sm">No results yet.</p>'}</section><section class="builder-attribute-panel"><h3>Assign your results</h3>${bonusText?`<p class="builder-attribute-note">Racial bonuses: ${esc(bonusText)}</p>`:''}${builderAttributeAssignmentRows(b)}</section>`;
+  }else if(method==='physical')panel=`<section class="builder-attribute-panel"><h3>Physical Dice</h3><p class="builder-attribute-note">Roll six scores yourself, calculate each total, and enter the results below. Each result can be edited, and Clear all removes every result and assignment.</p>${builderPhysicalInputs(b)}<div class="row" style="margin-top:10px"><button class="btn ghost" data-a="builderClearPhysical">Clear all</button></div></section><section class="builder-attribute-panel"><h3>Assign your results</h3>${bonusText?`<p class="builder-attribute-note">Racial bonuses: ${esc(bonusText)}</p>`:''}${builderAttributeAssignmentRows(b)}</section>`;
+  else panel=`<section class="builder-attribute-panel"><h3>Standard Array</h3><p class="builder-attribute-note">Assign each of these scores once: 15, 14, 13, 12, 10, and 8.</p><div class="builder-attribute-results">${BUILDER_STANDARD_ARRAY.map(value=>`<span class="builder-attribute-result">${value}</span>`).join('')}</div>${bonusText?`<p class="builder-attribute-note">Racial bonuses: ${esc(bonusText)}</p>`:''}${builderAttributeAssignmentRows(b)}</section>`;
+  return `<p class="builder-intro">Choose an ability-score method, then assign one available value to each attribute. Final totals include racial bonuses.</p><div class="builder-attribute-methods">${methods.map(([key,name,detail])=>`<button class="builder-attribute-method ${method===key||(key==='roll'&&method==='physical')?'selected':''}" data-a="builderAttributeMethod" data-method="${key}"><strong>${name}</strong><small>${detail}</small></button>`).join('')}</div>${method==='roll'||method==='physical'?`<div class="builder-attribute-methods" style="grid-template-columns:1fr 1fr"><button class="builder-attribute-method ${method==='roll'?'selected':''}" data-a="builderAttributeMethod" data-method="roll"><strong>Roll dice</strong><small>Roll 4d6 and drop the lowest</small></button><button class="builder-attribute-method ${method==='physical'?'selected':''}" data-a="builderAttributeMethod" data-method="physical"><strong>Physical Dice</strong><small>Enter the six results yourself</small></button></div>`:''}${panel}`;
+}
 function builderRaceTraitList(traits,b,scope){
   return traits.map(([name,description])=>{const key=scope+':'+name,open=b.raceFeature===key;return `<div class="builder-level"><button class="builder-race-trait ${open?'open':''}" data-a="builderRaceFeature" data-feature="${esc(name)}" aria-expanded="${open}"><strong>${esc(name)}</strong><span>${open?'⌃':'⌄'}</span></button>${open?`<div class="builder-feature-detail">${esc(description)}</div>`:''}</div>`;}).join('');
 }
@@ -1422,7 +1495,7 @@ function builderCustomBackgroundCard(b){
   return `<div><div class="builder-race-card ${selected?'selected':''}"><button class="builder-race-pick" data-a="builderBackground" data-background="__custom__"><span class="builder-race-name">Custom Background${selected?'<span class="pill acc" style="float:right">Selected</span>':''}</span><span class="builder-race-meta">Tools: ${esc(tools)}</span><span class="builder-race-meta">Skills: ${esc(b.customBackgroundSkills||'define your own')}</span><span class="builder-race-count">Feature: ${esc(b.customBackgroundFeature||'define your own')}</span></button></div>${selected?`<div class="builder-race-detail"><div class="builder-custom-fields"><label class="full"><span class="lbl">Background name</span><input data-background-field="customBackgroundName" value="${esc(b.customBackgroundName||'')}" placeholder="e.g. Royal Cartographer" autocomplete="off"></label><label class="full"><span class="lbl">Skills</span><input data-background-field="customBackgroundSkills" value="${esc(b.customBackgroundSkills||'')}" placeholder="e.g. Insight, Religion"></label><label class="full"><span class="lbl">Tools</span><input data-background-field="customBackgroundTools" value="${esc(b.customBackgroundTools??'none')}" placeholder="e.g. Herbalism kit, or none"></label><label class="full"><span class="lbl">Feature name</span><input data-background-field="customBackgroundFeature" value="${esc(b.customBackgroundFeature||'')}" placeholder="e.g. Shelter of the Faithful"></label><label class="full"><span class="lbl">Feature details</span><textarea data-background-field="customBackgroundDetail" placeholder="Describe what this feature provides">${esc(b.customBackgroundDetail||'')}</textarea></label></div></div>`:''}</div>`;
 }
 
-const BUILDER_STAGES=['Class','Race','Background','Skills','Equipment','Details','Review'];
+const BUILDER_STAGES=['Class','Race','Background','Skills','Attributes','Equipment','Details','Review'];
 const builderClass=n=>BUILDER_CLASSES.find(x=>x.name===n);
 const builderSubData=(c,n)=>c&&c.subs.find(x=>x.name===n);
 function builderProgress(stage){
@@ -1441,9 +1514,9 @@ function builderClassCard(x,b){
 }
 function builderView(m){
   const b=m.builder||(m.builder={stage:1,level:1,cls:'',sub:'',help:null,feature:'',race:'',raceSub:''}),stage=b.stage||1,cl=builderClass(b.cls),sub=cl&&builderSubData(cl,b.help||b.sub),classHelp=b.helpKind==='class'&&b.help&&sub,ready=builderStageReady(stage,b);
-  const body=stage===1?`<p class="builder-intro">Choose a class and stated character level. Subclass-granted choices in later stages use this level.</p><label class="builder-level-choice"><span class="lbl">Character level</span><select data-builder-level aria-label="Character level">${Array.from({length:20},(_,i)=>i+1).map(level=>`<option value="${level}" ${Number(b.level||1)===level?'selected':''}>Level ${level}</option>`).join('')}</select></label><div class="builder-class-list">${BUILDER_CLASSES.map(x=>builderClassCard(x,b)).join('')}</div>`:stage===2?`<p class="builder-intro">Choose a race to see its ability score increases, subraces, and traits. Use ? for details.</p><div class="builder-race-list">${BUILDER_RACES.map(x=>builderRaceCard(x,b)).join('')}${builderCustomRaceCard(b)}</div>`:stage===3?`<p class="builder-intro">Choose a 2014 Player’s Handbook background to see its proficiencies and feature, or create a custom background.</p><div class="builder-race-list">${BUILDER_BACKGROUNDS.map(x=>builderBackgroundCard(x,b)).join('')}${builderCustomBackgroundCard(b)}</div>`:stage===4?builderSkillsView(b):'<div class="builder-placeholder">(Still not implemented)</div>';
-  const heading=stage===1?'<h3>Choose your class and level</h3>':stage===2?'<h3>Choose your race</h3>':stage===3?'<h3>Choose your background</h3>':stage===4?'<h3>Choose your skills</h3>':'';
-  return `<div class="builder-modal"><div class="builder-top"><div class="builder-title"><button class="btn ghost sm" data-a="builderClose" aria-label="Close character builder">×</button><h2>Character Builder</h2><span class="tag">${stage}/7</span></div><div class="builder-stage-label">Stage <b>${esc(BUILDER_STAGES[stage-1])}</b></div><div class="builder-progress">${builderProgress(stage)}</div></div><main class="builder-body">${heading}${body}</main>${classHelp?builderHelpPanel(sub):''}${stage===2&&b.raceHelp?builderRaceHelpPanel(b):''}<div class="builder-actions"><button class="btn ghost" data-a="builderBack">← Back</button><span class="muted">Stage ${stage} of 7</span><button class="btn primary" data-a="builderContinue" ${!ready?'disabled':''}>${stage===7?'Finish':'Continue'} →</button></div></div>`;
+  const body=stage===1?`<p class="builder-intro">Choose a class and stated character level. Subclass-granted choices in later stages use this level.</p><label class="builder-level-choice"><span class="lbl">Character level</span><select data-builder-level aria-label="Character level">${Array.from({length:20},(_,i)=>i+1).map(level=>`<option value="${level}" ${Number(b.level||1)===level?'selected':''}>Level ${level}</option>`).join('')}</select></label><div class="builder-class-list">${BUILDER_CLASSES.map(x=>builderClassCard(x,b)).join('')}</div>`:stage===2?`<p class="builder-intro">Choose a race to see its ability score increases, subraces, and traits. Use ? for details.</p><div class="builder-race-list">${BUILDER_RACES.map(x=>builderRaceCard(x,b)).join('')}${builderCustomRaceCard(b)}</div>`:stage===3?`<p class="builder-intro">Choose a 2014 Player’s Handbook background to see its proficiencies and feature, or create a custom background.</p><div class="builder-race-list">${BUILDER_BACKGROUNDS.map(x=>builderBackgroundCard(x,b)).join('')}${builderCustomBackgroundCard(b)}</div>`:stage===4?builderSkillsView(b):stage===5?builderAttributesView(b):'<div class="builder-placeholder">(Still not implemented)</div>';
+  const heading=stage===1?'<h3>Choose your class and level</h3>':stage===2?'<h3>Choose your race</h3>':stage===3?'<h3>Choose your background</h3>':stage===4?'<h3>Choose your skills</h3>':stage===5?'<h3>Set your attributes</h3>':'';
+  return `<div class="builder-modal"><div class="builder-top"><div class="builder-title"><button class="btn ghost sm" data-a="builderClose" aria-label="Close character builder">×</button><h2>Character Builder</h2><span class="tag">${stage}/8</span></div><div class="builder-stage-label">Stage <b>${esc(BUILDER_STAGES[stage-1])}</b></div><div class="builder-progress">${builderProgress(stage)}</div></div><main class="builder-body">${heading}${body}</main>${classHelp?builderHelpPanel(sub):''}${stage===2&&b.raceHelp?builderRaceHelpPanel(b):''}<div class="builder-actions"><button class="btn ghost" data-a="builderBack">← Back</button><span class="muted">Stage ${stage} of 8</span><button class="btn primary" data-a="builderContinue" ${!ready?'disabled':''}>${stage===8?'Finish':'Continue'} →</button></div></div>`;
 }
 
 /* modals */
@@ -1575,11 +1648,16 @@ const A={
   closeModal(){S.modal=null;},
   modalBg(el,e){if(e.target!==el)return false;S.modal=null;},
   creationManual(){S.modal={t:'newchar',camp:S.modal.camp};},
-  creationBuilder(){S.builderScroll=0;S.modal={t:'builder',camp:S.modal.camp,builder:{stage:1,level:1,cls:'',sub:'',help:null,feature:'',classSkills:[],subclassSkills:[]}};},
+  creationBuilder(){S.builderScroll=0;S.modal={t:'builder',camp:S.modal.camp,builder:{stage:1,level:1,cls:'',sub:'',help:null,feature:'',classSkills:[],subclassSkills:[],attributeMethod:'standard',pointBuy:Object.fromEntries(BUILDER_ATTRIBUTES.map(x=>[x,8])),rollResults:[],physicalResults:[],attributeAssignments:{}}};},
   creationBack(){S.modal={t:'creationMode',camp:S.modal.camp};},
   builderClose(){S.modal=null;},
   builderClass(el){const b=S.modal.builder,x=builderClass(el.dataset.cls);if(!x)return;const changed=b.cls!==x.name;if(changed){b.classSkills=[];b.subclassSkills=[];}b.cls=x.name;if(x.name==='Custom Class')b.sub='__custom__';else if(changed)b.sub='';b.help=null;b.helpKind='';b.feature='';},
   builderSub(el){const b=S.modal.builder,next=el.dataset.sub;if(b.sub!==next)b.subclassSkills=[];b.sub=next;b.help=null;b.helpKind='';b.feature='';},
+  builderAttributeMethod(el){const b=S.modal.builder,next=el.dataset.method;b.attributeMethod=next;b.attributeAssignments=b.attributeAssignments||{};b.attributeAssignments[next]=b.attributeAssignments[next]||{};},
+  builderRollDice(){const b=S.modal.builder;b.attributeMethod='roll';b.rollResults=Array.from({length:6},()=>{const dice=Array.from({length:4},()=>Math.floor(Math.random()*6)+1).sort((a,z)=>a-z);return dice.slice(1).reduce((sum,value)=>sum+value,0);});b.attributeAssignments=b.attributeAssignments||{};b.attributeAssignments.roll={};},
+  builderClearRolls(){const b=S.modal.builder;b.rollResults=[];b.attributeAssignments=b.attributeAssignments||{};b.attributeAssignments.roll={};},
+  builderPointBuy(el){const b=S.modal.builder,attribute=el.dataset.attribute,value=builderPointBuyValue(b,attribute),next=value+Number(el.dataset.delta);if(BUILDER_POINT_COST[next]===undefined||next<8||next>15)return false;const delta=BUILDER_POINT_COST[next]-BUILDER_POINT_COST[value];if(delta>builderPointBuyRemaining(b))return false;b.pointBuy=b.pointBuy||{};b.pointBuy[attribute]=next;},
+  builderClearPhysical(){const b=S.modal.builder;b.physicalResults=Array(6).fill('');b.attributeAssignments=b.attributeAssignments||{};b.attributeAssignments.physical={};},
   builderHelp(el){const b=S.modal.builder;b.help=el.dataset.sub;b.helpKind='class';b.feature='';},
   builderRace(el){const b=S.modal.builder;b.race=el.dataset.race;b.raceSub='';b.raceHelp=null;b.raceFeature='';},
   builderRaceSub(el){const b=S.modal.builder;b.raceSub=el.dataset.sub;b.raceHelp=null;b.raceFeature='';},
@@ -1589,9 +1667,9 @@ const A={
   builderRaceFeature(el){const b=S.modal.builder,h=b.raceHelp,r=builderRaceData(h&&h.race),sub=h&&h.kind==='subrace'&&builderRaceSubData(r,h.sub),traits=sub?sub.traits:r&&r.traits,trait=traits&&traits.find(x=>x[0]===el.dataset.feature);if(!trait)return false;const scope=sub?'sub:'+r.name+':'+sub.name:'race:'+r.name,key=scope+':'+trait[0],expanded=b.raceFeature!==key;b.raceFeature=expanded?key:'';const level=el.closest('.builder-level');if(!level)return false;const detail=level.querySelector('.builder-feature-detail');if(expanded){document.querySelectorAll('.builder-race-trait.open').forEach(other=>{if(other===el)return;other.classList.remove('open');other.setAttribute('aria-expanded','false');const otherIcon=other.querySelector('span');if(otherIcon)otherIcon.textContent='⌄';other.closest('.builder-level')?.querySelector('.builder-feature-detail')?.remove();});}if(expanded&&!detail){el.classList.add('open');el.setAttribute('aria-expanded','true');const icon=el.querySelector('span');if(icon)icon.textContent='⌃';el.insertAdjacentHTML('afterend',`<div class="builder-feature-detail">${esc(trait[1])}</div>`);}else if(detail){el.classList.remove('open');el.setAttribute('aria-expanded','false');const icon=el.querySelector('span');if(icon)icon.textContent='⌄';detail.remove();}return false;},
   builderFeature(el){const b=S.modal.builder,cl=builderClass(b.cls),sub=cl&&builderSubData(cl,b.help||b.sub),i=Number(el.dataset.feature),x=sub&&sub.levels[i],key=sub&&sub.name+':'+i;if(!key||!x)return false;const expanded=b.feature!==key;b.feature=expanded?key:'';if(expanded){document.querySelectorAll('.builder-feature.open').forEach(other=>{if(other===el)return;other.classList.remove('open');other.setAttribute('aria-expanded','false');const otherIcon=other.querySelector('span');if(otherIcon)otherIcon.textContent='⌄';other.closest('.builder-level')?.querySelector('.builder-feature-detail')?.remove();});}el.classList.toggle('open',expanded);el.setAttribute('aria-expanded',expanded?'true':'false');const icon=el.querySelector('span');if(icon)icon.textContent=expanded?'⌃':'⌄';const level=el.closest('.builder-level');if(!level)return false;const detail=level.querySelector('.builder-feature-detail');if(expanded&&!detail){el.insertAdjacentHTML('afterend',`<div class="builder-feature-detail">${esc(x[3]||x[2])}</div>`);}else if(!expanded&&detail){detail.remove();}return false;},
   builderHelpClose(){const b=S.modal.builder;b.help=null;b.helpKind='';b.feature='';b.raceHelp=null;b.raceFeature='';},
-  builderStage(el){S.builderScroll=0;S.modal.builder.stage=clamp(Number(el.dataset.stage)||1,1,7);A.builderHelpClose();},
+  builderStage(el){S.builderScroll=0;S.modal.builder.stage=clamp(Number(el.dataset.stage)||1,1,8);A.builderHelpClose();},
   builderBack(){const m=S.modal,b=m.builder;if(b.help||b.raceHelp){A.builderHelpClose();return;}if(b.stage>1){b.stage--;S.builderScroll=0;}else S.modal={t:'creationMode',camp:m.camp};},
-  builderContinue(){const m=S.modal,b=m.builder;if(!builderStageReady(b.stage,b)){toast(b.stage===1?'Choose a class and subclass before continuing.':b.stage===2?'Choose a race and subrace before continuing.':b.stage===3?'Choose a background or complete the custom background before continuing.':'Complete this stage before continuing.');return false;}if(b.stage<7){b.stage++;S.builderScroll=0;A.builderHelpClose();}else{toast('The remaining builder stages are still being built.');return false;}},
+  builderContinue(){const m=S.modal,b=m.builder;if(!builderStageReady(b.stage,b)){toast(b.stage===1?'Choose a class and subclass before continuing.':b.stage===2?'Choose a race and subrace before continuing.':b.stage===3?'Choose a background or complete the custom background before continuing.':b.stage===5?'Complete your attribute assignments before continuing.':'Complete this stage before continuing.');return false;}if(b.stage<8){b.stage++;S.builderScroll=0;A.builderHelpClose();}else{toast('The remaining builder stages are still being built.');return false;}},
   openCamp(el){S.modal={t:'role',camp:el.dataset.id};},
   roleDM(){const id=S.modal.camp;let remembered='';try{remembered=localStorage.getItem('chronicle-dm-password:'+id)||'';}catch(e){}S.modal={t:'dmpw',camp:id,remembered};if(remembered){A.dmpwGo();return false;}},
   rolePlayer(){enterPlayer(camps.find(x=>x.id===S.modal.camp));},
@@ -1950,6 +2028,10 @@ document.addEventListener('change',e=>{
     const spec=builderSkillSpec(b);if(!spec||!spec.subclassChoices)b.subclassSkills=[];
     render();return;
   }
+  const attribute=e.target.closest('[data-builder-attribute]');
+  if(attribute&&S.modal&&S.modal.t==='builder'){
+    const b=S.modal.builder,assignments=builderAttributeAssignments(b);if(attribute.value)assignments[attribute.dataset.builderAttribute]=attribute.value;else delete assignments[attribute.dataset.builderAttribute];render();return;
+  }
   const skill=e.target.closest('[data-builder-skill]');
   if(skill&&S.modal&&S.modal.t==='builder'){
     const b=S.modal.builder,scope=skill.dataset.builderSkill,key=scope==='class'?'classSkills':'subclassSkills',selected=Array.isArray(b[key])?b[key]:[],other=scope==='class'?(Array.isArray(b.subclassSkills)?b.subclassSkills:[]):(Array.isArray(b.classSkills)?b.classSkills:[]),spec=builderSkillSpec(b),pool=spec&&(scope==='class'?spec.classPool:spec.subclassPool),background=builderBackgroundSkillData(b).skills;
@@ -1961,7 +2043,7 @@ document.addEventListener('change',e=>{
   const fn=C[el.dataset.c];if(!fn)return;
   if(fn(el,el.value)!==false)render();if(el.dataset.camp==='__offline__')persistOfflinePlay();
 });
-document.addEventListener('input',e=>{const field=e.target.closest('[data-background-field]');if(!field||!S.modal||S.modal.t!=='builder')return;const b=S.modal.builder;b[field.dataset.backgroundField]=field.value;const next=document.querySelector('.builder-actions [data-a="builderContinue"]');if(next&&b.stage===3)next.disabled=!builderStageReady(3,b);});
+document.addEventListener('input',e=>{const physical=e.target.closest('[data-builder-physical]');if(physical&&S.modal&&S.modal.t==='builder'){const b=S.modal.builder;b.physicalResults=b.physicalResults||Array(6).fill('');b.physicalResults[Number(physical.dataset.builderPhysical)]=physical.value;const next=document.querySelector('.builder-actions [data-a="builderContinue"]');if(next&&b.stage===5)next.disabled=!builderStageReady(5,b);return;}const field=e.target.closest('[data-background-field]');if(!field||!S.modal||S.modal.t!=='builder')return;const b=S.modal.builder;b[field.dataset.backgroundField]=field.value;const next=document.querySelector('.builder-actions [data-a="builderContinue"]');if(next&&b.stage===3)next.disabled=!builderStageReady(3,b);});
 document.addEventListener('input',e=>{const raceField=e.target.closest('[data-race-field]');if(raceField&&S.modal&&S.modal.t==='builder'){const b=S.modal.builder;b[raceField.dataset.raceField]=raceField.value;const next=document.querySelector('.builder-actions [data-a="builderContinue"]');if(next)next.disabled=!builderStageReady(2,b);return;}const el=e.target.closest('[data-c]');if(!el||el.dataset.camp!=='__offline__')return;const fn=C[el.dataset.c];if(fn)fn(el,el.value);persistOfflinePlay();});
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.enter){
