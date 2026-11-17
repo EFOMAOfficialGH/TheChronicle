@@ -2051,7 +2051,7 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();const input=e.target,raw=input.value.trim(),value=Number(raw),b=S.modal.builder;
     if(!/^\d+$/.test(raw)||!Number.isInteger(value)||value<3||value>18){input.value='';toast('Enter a whole number from 3 to 18.');return;}
     b.physicalResults=b.physicalResults||[];if(b.physicalResults.length>=6){input.value='';toast('You already entered six results.');return;}
-    b.physicalResults.push(value);input.value='';const body=document.querySelector('.builder-body');if(body)S.builderScroll=body.scrollTop;render();return;
+    b.physicalResults.push(value);input.value='';const body=document.querySelector('.builder-body');if(body)S.builderScroll=body.scrollTop;render();requestAnimationFrame(()=>{const next=document.querySelector('[data-builder-physical-entry]');if(next){next.focus();next.setSelectionRange(next.value.length,next.value.length);}});return;
   }
   if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.enter){
     const b=document.querySelector('[data-a="'+e.target.dataset.enter+'"]');if(b){e.preventDefault();b.click();}
