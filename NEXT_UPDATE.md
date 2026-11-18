@@ -93,3 +93,10 @@ Implemented:
 
 - Review cards now stack vertically in a single column instead of appearing side by side.
 - Removed the separate placeholder Equipment stage from the guided flow. The normal flow is now 7 stages with Review at Stage 7; characters needing Feature Choice use 8 stages with Feature Choice at Stage 7 and Review at Stage 8.
+
+## Review controls refinement
+
+- Tool proficiency entries such as “One artisan’s tool type,” “One gaming set,” and “One musical instrument” now render a dropdown with the available choices, and the selected choice is retained in builder state.
+- The six attributes now use compact square stat cards with the score above the attribute name.
+- Review AC labels now read “AC (Unarmored)” and “AC (Leather Armor)”.
+- Class-equipment options now include `?` buttons that open an in-builder description overlay; the removed Equipment stage is not needed for these descriptions.
