@@ -100,3 +100,9 @@ Implemented:
 - The six attributes now use compact square stat cards with the score above the attribute name.
 - Review AC labels now read “AC (Unarmored)” and “AC (Leather Armor)”.
 - Class-equipment options now include `?` buttons that open an in-builder description overlay; the removed Equipment stage is not needed for these descriptions.
+
+## Equipment detail refinement
+
+- Class-equipment choice summaries now update immediately when a different dropdown option is selected.
+- The `?` overlay now describes the currently selected option with Summary, Type, Category, Weight, Damage, Damage Type, and Cost fields.
+- Equipment detail data covers the common weapons, armor, packs, spellcasting focuses, tools, and other options used by the builder; unavailable values are shown as em dashes rather than omitted.
