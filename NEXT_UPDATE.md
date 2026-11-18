@@ -72,3 +72,19 @@ Implemented:
 - JavaScript syntax check and `git diff --check` passed after the in-place accordion and full-sheet drag changes.
 - JavaScript syntax check and `git diff --check` passed after the complete official feature-data replacement and mobile pointer-capture fix.
 - JavaScript syntax check and `git diff --check` passed after restoring mobile scrolling alongside drag-to-dismiss.
+
+## Latest milestone: conditional Feature Choice and Review
+
+- The builder now uses a dynamic 8- or 9-stage flow.
+- The normal flow labels Stage 8 **Review**. Characters with class/subclass decisions use Stage 8 **Feature Choice** and Stage 9 **Review**.
+- Implemented Feature Choice examples for Ranger (Favored Enemy and Natural Explorer), Fighter (Fighting Style), Rogue (two Expertise choices), Draconic Bloodline Sorcerer (Dragon Ancestor), and Totem Warrior Barbarian (Totem Spirit).
+- The Review screen includes Identity, Class, Starting Gold, Race, Background, Skills, Attributes, Tool Proficiencies, Starting Equipment, and Class Equipment sections.
+- Review includes a starting-gold formula, Roll button, editable gold value, removable starting-item checkboxes, and class equipment choose-one selectors with descriptions.
+- The final character-save action remains intentionally pending until the Review/Equipment integration is completed.
+
+## Validation for conditional Feature Choice and Review
+
+- HTML parser check passed.
+- JavaScript `node --check` passed.
+- `git diff --check` passed.
+- Chromium smoke test passed; the app mounts and Ranger activates a nine-step progress bar.
