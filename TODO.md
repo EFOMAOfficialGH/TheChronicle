@@ -32,3 +32,8 @@
 - [x] **Character details:** Add Character Name, Age, Height, and Backstory fields.
 - [x] **Required name:** Keep Age, Height, and Backstory optional; require a nonblank Character Name before continuing.
 - [x] **Stage flow:** Expand the builder to nine stages and place Basic Info between Attributes and Equipment.
+
+## Stage 9 Review — complete
+
+- [x] **Review summary:** Show the character's selected identity, attributes, skills, and optional backstory before saving.
+- [x] **Finish:** Create and persist the character using the existing character and campaign save paths; seat it in the selected campaign when creation started there.

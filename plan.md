@@ -17,3 +17,7 @@ Stage 5 uses three transient builder methods: the fixed Standard Array, 27-point
 ## Stage 6 Basic Info
 
 Stage 6 stores transient `basicName`, `basicAge`, `basicHeight`, and `basicBackstory` fields in the existing builder state. Character Name is the only required field; delegated input handling updates the state and Continue readiness as the user types. The stage list is expanded to nine entries so Equipment, Details, and Review follow Basic Info without changing the Supabase schema.
+
+## Review and Finish
+
+Stage 9 renders a compact review from the transient builder state. Finish validates the completed required stages, converts the selected attribute method and racial bonuses into the character's six ability scores, combines background/class/subclass skills, creates the standard character record, and uses the existing queue/save and campaign-seat behavior. No new persistence schema is required.
