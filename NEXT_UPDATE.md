@@ -106,3 +106,7 @@ Implemented:
 - Class-equipment choice summaries now update immediately when a different dropdown option is selected.
 - The `?` overlay now describes the currently selected option with Summary, Type, Category, Weight, Damage, Damage Type, and Cost fields.
 - Equipment detail data covers the common weapons, armor, packs, spellcasting focuses, tools, and other options used by the builder; unavailable values are shown as em dashes rather than omitted.
+
+## Equipment catalog fact-check correction
+
+A class-by-class 2014 rules review found that several equipment branches had been incorrectly represented as included items. The catalog now models exclusive choices for all twelve classes. Cleric now chooses among scale mail, leather armor, and chain mail instead of automatically receiving scale mail; Cleric also has its weapon, ranged-weapon, and pack choices. Equivalent corrections were made for Barbarian, Bard, Druid, Fighter, Monk, Paladin, Ranger, Rogue, Sorcerer, Warlock, and Wizard, including conditional armor packages, weapon bundles, packs, spellcasting aids, and musical instruments. The rules basis is the 2014 Basic Rules/SRD, not the 2024 equipment system.

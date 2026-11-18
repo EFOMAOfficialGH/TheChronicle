@@ -1545,18 +1545,18 @@ const BUILDER_TOOL_OPTIONS={artisan:["Alchemist’s supplies","Brewer’s suppli
 function builderToolChoiceType(text){const t=String(text||'').toLowerCase();if(t.includes('artisan')&&t.includes('one'))return 'artisan';if(t.includes('gaming set')&&t.includes('one'))return 'gaming';if(t.includes('musical instrument')&&t.includes('one'))return 'musical';return ''; }
 function builderToolProficiencyView(b,bg){const raw=String(bg.tools||'none');return raw.split(/,\s*/).map((part,i)=>{const type=builderToolChoiceType(part),key=type+':'+i;if(!type)return `<p>${esc(part)}</p>`;const selected=b.toolChoices&&b.toolChoices[key]||'';return `<div class="builder-tool-choice"><label class="lbl" for="builder-tool-${i}">${esc(part)}</label><select id="builder-tool-${i}" data-builder-tool-choice="${esc(key)}"><option value="">Choose one</option>${BUILDER_TOOL_OPTIONS[type].map(option=>`<option value="${esc(option)}" ${selected===option?'selected':''}>${esc(option)}</option>`).join('')}</select></div>`;}).join('')||'<p>None recorded</p>'; }
 const BUILDER_EQUIPMENT={
-  Barbarian:{included:['Greataxe','Handaxe','Explorer’s pack'],choices:[['Martial melee weapon','Greataxe','Greatsword'],['Simple weapon','Handaxe','Javelin'],['Pack','Explorer’s pack','Dungeoneer’s pack']]},
-  Bard:{included:['Leather armor','Dagger','Lute'],choices:[['Weapon','Rapier','Longsword'],['Pack','Diplomat’s pack','Entertainer’s pack']]},
-  Cleric:{included:['Scale mail','Shield','Holy symbol'],choices:[['Weapon','Mace','Warhammer'],['Pack','Priest’s pack','Explorer’s pack']]},
-  Druid:{included:['Leather armor','Wooden shield','Druidic focus'],choices:[['Weapon','Scimitar','Simple melee weapon'],['Pack','Explorer’s pack','Dungeoneer’s pack']]},
-  Fighter:{included:['Chain mail','Shield','Dungeoneer’s pack'],choices:[['Martial weapon and shield','Longsword and shield','Two martial weapons'],['Ranged weapon','Light crossbow and 20 bolts','Two handaxes'],['Pack','Dungeoneer’s pack','Explorer’s pack']]},
-  Monk:{included:['10 darts'],choices:[['Weapon','Shortsword','Simple weapon'],['Pack','Dungeoneer’s pack','Explorer’s pack']]},
-  Paladin:{included:['Chain mail','Holy symbol'],choices:[['Martial weapon and shield','Longsword and shield','Two martial weapons'],['Ranged weapon','Five javelins','Simple melee weapon'],['Pack','Priest’s pack','Explorer’s pack']]},
-  Ranger:{included:['Leather armor','Longbow','20 arrows'],choices:[['Weapon set','Two shortswords','Two simple melee weapons'],['Pack','Dungeoneer’s pack','Explorer’s pack']]},
-  Rogue:{included:['Leather armor','Two daggers','Thieves’ tools'],choices:[['Weapon','Rapier','Shortsword'],['Ranged weapon','Shortbow and 20 arrows','Shortsword'],['Pack','Burglar’s pack','Dungeoneer’s pack']]},
-  Sorcerer:{included:['Dagger','Component pouch'],choices:[['Weapon','Light crossbow and 20 bolts','Simple weapon'],['Pack','Dungeoneer’s pack','Explorer’s pack']]},
-  Warlock:{included:['Leather armor','Dagger','Arcane focus'],choices:[['Weapon','Light crossbow and 20 bolts','Simple weapon'],['Pack','Scholar’s pack','Dungeoneer’s pack']]},
-  Wizard:{included:['Spellbook','Component pouch'],choices:[['Weapon','Quarterstaff','Dagger'],['Arcane focus','Component pouch','Arcane focus'],['Pack','Scholar’s pack','Explorer’s pack']]}
+  Barbarian:{included:["Explorer’s pack",'Four javelins'],choices:[['Martial melee weapon','Greataxe','Any martial melee weapon'],['Simple weapon','Two handaxes','Any simple weapon']]},
+  Bard:{included:['Leather armor','Dagger'],choices:[['Weapon','Rapier','Longsword','Any simple weapon'],['Pack','Diplomat’s pack','Entertainer’s pack'],['Musical instrument','Lute','Any other musical instrument']]},
+  Cleric:{included:['Shield','Holy symbol'],choices:[['Weapon','Mace','Warhammer'],['Armor','Scale mail','Leather armor','Chain mail'],['Ranged weapon','Light crossbow and 20 bolts','Any simple weapon'],['Pack','Priest’s pack','Explorer’s pack']]},
+  Druid:{included:['Leather armor','Explorer’s pack','Druidic focus'],choices:[['Shield or weapon','Wooden shield','Any simple weapon'],['Weapon','Scimitar','Any simple melee weapon']]},
+  Fighter:{included:[],choices:[['Armor package','Chain mail','Leather armor, longbow, and 20 arrows'],['Martial weapon package','One martial weapon and a shield','Two martial weapons'],['Ranged weapon package','Light crossbow and 20 bolts','Two handaxes'],['Pack','Dungeoneer’s pack','Explorer’s pack']]},
+  Monk:{included:['10 darts'],choices:[['Weapon','Shortsword','Any simple weapon'],['Pack','Dungeoneer’s pack','Explorer’s pack']]},
+  Paladin:{included:['Chain mail','Holy symbol'],choices:[['Martial weapon package','One martial weapon and a shield','Two martial weapons'],['Weapon','Five javelins','Any simple melee weapon'],['Pack','Priest’s pack','Explorer’s pack']]},
+  Ranger:{included:['Longbow','Quiver with 20 arrows'],choices:[['Armor','Scale mail','Leather armor'],['Melee weapons','Two shortswords','Two simple melee weapons'],['Pack','Dungeoneer’s pack','Explorer’s pack']]},
+  Rogue:{included:['Leather armor','Two daggers','Thieves’ tools'],choices:[['Weapon','Rapier','Shortsword'],['Ranged weapon','Shortbow with quiver and 20 arrows','Shortsword'],['Pack','Burglar’s pack','Dungeoneer’s pack','Explorer’s pack']]},
+  Sorcerer:{included:['Two daggers'],choices:[['Weapon','Light crossbow and 20 bolts','Any simple weapon'],['Spellcasting aid','Component pouch','Arcane focus'],['Pack','Dungeoneer’s pack','Explorer’s pack']]},
+  Warlock:{included:['Leather armor','Any simple weapon','Two daggers'],choices:[['Weapon','Light crossbow and 20 bolts','Any simple weapon'],['Spellcasting aid','Component pouch','Arcane focus'],['Pack','Scholar’s pack','Dungeoneer’s pack']]},
+  Wizard:{included:['Spellbook'],choices:[['Weapon','Quarterstaff','Dagger'],['Spellcasting aid','Component pouch','Arcane focus'],['Pack','Scholar’s pack','Explorer’s pack']]}
 };
 function builderEquipmentData(b){return BUILDER_EQUIPMENT[b.cls]||{included:[],choices:[]};}
 const BUILDER_EQUIPMENT_DETAILS={
